@@ -1,0 +1,9 @@
+# dsh bundle patch for dsh-programming-mode.
+# Inserts one HOST plugin row: at profile boot its apply() plants the bundled
+# 编程模式 preset directory into the roster's first user-trust preset root
+# (by default $DSH_HOME/.agent-presets/). A preset cannot ride a bundle as a
+# composition root (the launcher pins the agent-presets `roots` config), so
+# distribution works by planting files into the writable user root instead.
+- insert:
+    - id: programming-mode-installer
+      name: 'dsh-programming-mode'

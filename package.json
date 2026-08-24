@@ -1,0 +1,34 @@
+{
+  "name": "dsh-programming-mode",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness 编程模式组合包：标准模式之上强制执行 Superpowers 工程纪律（TDD、系统化调试、先计划后编码、完成前验证、代码审查），内置全套 superpowers 技能，dsh plugin add 一键安装。",
+  "author": {
+    "name": "子都",
+    "url": "https://github.com/ziduup"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ziduup/dsh-programming-mode.git"
+  },
+  "type": "module",
+  "main": "index.js",
+  "license": "MIT",
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "preset"
+  ],
+  "keywords": [
+    "deepseek",
+    "harness",
+    "dsh-plugin",
+    "dsh-bundle",
+    "agent-preset",
+    "superpowers"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
