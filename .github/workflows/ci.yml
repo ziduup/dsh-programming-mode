@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 植入策略 dry-run（四条策略）
+        run: node scripts/dry-run.mjs
+      - name: 包内容冒烟（files 字段正确性）
+        run: |
+          npm pack --dry-run
+          node -e "const p=require('./package.json'); if(!p.dsh||!p.dsh.bundle||!p.dsh.bundle.patch) process.exit(1); console.log('dsh.bundle manifest OK:', p.dsh.bundle.patch)"
+      - name: preset 组合可解析（YAML + 关键行存在）
+        run: |
+          node -e "
+            const fs = require('fs');
+            const y = fs.readFileSync('preset/programming/agent.cordis.yml', 'utf8');
+            for (const must of ['id: persona', 'customSkillDirs', 'skill-filesystem', 'tool-skill']) {
+              if (!y.includes(must)) { console.error('missing: ' + must); process.exit(1); }
+            }
+            const skills = fs.readdirSync('preset/programming/skills').filter(n => !n.endsWith('.md'));
+            if (skills.length !== 14) { console.error('expected 14 bundled skills, got ' + skills.length); process.exit(1); }
+            console.log('composition rows OK, 14 skills bundled');
+          "
