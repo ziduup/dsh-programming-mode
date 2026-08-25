@@ -3,6 +3,14 @@
 本项目的所有重要变更记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.2.0] - 2026-08-25
+
+### 变更
+
+- 捆绑技能整体升级至上游 obra/superpowers **v6.3.0**（2026-08-12 发布），14 个技能与上游 `skills/` 目录**逐字节一致**。
+- 新增 `writing-skills`；移除 `development-loop`（上游 v6.x 已删除该技能）。
+- 随上游演进而来：`subagent-driven-development` 审查提示词体系重构（re-review/task-reviewer + 三个配套脚本）、`test-driven-development` 以 writing-good-tests 取代 testing-anti-patterns、`using-superpowers` 平台参考更新（新增 antigravity/hermes/pi，移除 copilot）、`brainstorming` 可视化伴侣脚本更新。
+
 ## [0.1.0] - 2026-02-11
 
 ### 新增
