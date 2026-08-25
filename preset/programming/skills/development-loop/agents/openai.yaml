@@ -1,4 +1,0 @@
-interface:
-  display_name: "Development Loop"
-  short_description: "Goal-driven coding loop for Codex"
-  default_prompt: "Use $development-loop to complete this coding task with explicit goals, verification, and persisted loop state."

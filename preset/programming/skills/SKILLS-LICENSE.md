@@ -3,16 +3,18 @@
 This preset bundles 14 skill directories under `skills/`.
 
 - **Origin:** [obra/superpowers](https://github.com/obra/superpowers) (Jesse Vincent / Human Layer)
+- **Upstream version:** v6.3.0 (released 2026-08-12) — copied **verbatim** from the upstream `skills/` directory; the bundle tracks upstream one-to-one.
 - **License:** MIT — bundled here under the terms of the MIT License; upstream copyright and license notices remain within each skill directory where present, and this notice serves as the attribution required by that license.
-- **Modifications:** none to skill content; directories were copied verbatim from a user-level install (`~/.agents/skills`) dated 2026.
+- **Modifications:** none to skill content. Directory list refreshed at bundle v0.2.0: `writing-skills` added; `development-loop` removed (dropped by upstream).
 
-## Bundled skills
+## Bundled skills (14)
 
-using-superpowers · brainstorming · writing-plans · executing-plans ·
-test-driven-development · systematic-debugging · verification-before-completion ·
-requesting-code-review · receiving-code-review · using-git-worktrees ·
-subagent-driven-development · finishing-a-development-branch ·
-dispatching-parallel-agents · development-loop
+brainstorming · dispatching-parallel-agents · executing-plans ·
+finishing-a-development-branch · receiving-code-review ·
+requesting-code-review · subagent-driven-development ·
+systematic-debugging · test-driven-development · using-git-worktrees ·
+using-superpowers · verification-before-completion · writing-plans ·
+writing-skills
 
 ## Why bundled
 
