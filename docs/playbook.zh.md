@@ -183,6 +183,18 @@ description:
 - Git Data API 的 `GET git/commits/{sha}` **不接受 7 位短哈希**(404),先用 commits 列表换完整 SHA;
 - dsh 的 `plugin add` 超时被打断后,node_modules 可能已落地但 bundles 未登记——**重跑同一条命令**即可幂等补全,不要手改 package.json(会造成 lockfile 失配)。
 
+### 本地升级的加载路径:profile/node_modules 实体副本才是真相
+
+升级时只同步 `.dsh/plugins/<pkg>/`(link 目标)**不一定生效**:`dsh web`(以及 headless)实际加载的是 `<dshHome>/profiles/<profile>/node_modules/<pkg>/` 下的**实体副本**(package.json 里的 `link:` 声明在部分安装路径下并未真软链过去,node_modules 里是独立拷贝)。症状:重启后安装器日志出现 `updated: 0.2.1 -> 0.2.0`,`agentPresets` 的 live preset 被旧副本覆盖回退(新行、新 index.js 全丢)。
+
+**排查**:`Get-Item <profile>/node_modules/<pkg>` 看 `LinkType` 是否为空(空 = 实体副本),再读该目录 `package.json` 的 `version`。
+
+**修复**(三处必须一致):
+1. `robocopy <仓库> <dshHome>/.dsh/plugins/<pkg> /MIR /XD .git`(源);
+2. `robocopy <仓库> <dshHome>/profiles/<profile>/node_modules/<pkg> /MIR /XD .git`(加载实体——**最易漏**);
+3. 重启后让安装器按版本戳自动重植 live preset,或手工同步 `agent.cordis.yml` + 版本戳。
+验证:`Select-String '<profile>/node_modules/<pkg>/index.js' -Pattern 'role'` 命中即已生效。
+
 ---
 
 ## 七、当前状态快照(截至本文撰写)
@@ -193,7 +205,7 @@ description:
 | GitHub | ziduup/dsh-programming-mode,topics: dsh/dsh-plugin/deepseek/agent-preset/superpowers |
 | 市场 | PR awesome-dsh-plugin#3006 已合并(2026-08-27,维护者 fkysly),站点与市场约一天内自动收录 |
 | npm | 未发布(官网 403 待换出口;API 通道正常,登录后即可发) |
-| 本机 | 用户根 preset `programming` 已同步 v0.2.0 并带戳 |
+| 本机 | 用户根 preset `programming` 已同步 v0.2.1 并带戳;profile 实体副本已同步,三处版本一致 |
 
 ## 八、待办移交
 
