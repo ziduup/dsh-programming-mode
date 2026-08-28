@@ -1,3 +1,5 @@
 node_modules/
 scripts/tmp-plant-test/
 *.tgz
+# 本地开发经验/说明文档,不公开;仅保留在本地(源码仓库只发布代码)
+docs/

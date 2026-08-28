@@ -31,7 +31,6 @@ index.js            # 启动植入器：plantPreset() 四条策略 + apply()
 cordis.patch.yml    # bundle patch：insert 安装器行
 preset/programming/ # 植入的 preset 本体（组合 + 元数据 + 14 个捆绑技能）
 scripts/dry-run.mjs # 植入策略离线测试
-docs/design.zh.md   # 设计说明：为什么植入、版本戳、信任模型
 ```
 
 ## 提交规范
