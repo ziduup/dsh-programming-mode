@@ -57,7 +57,7 @@ dsh plugin --profile web remove dsh-programming-mode
 ## ⚠️ 信任声明
 
 - agent preset 与 shell 访问权限同级:安装本 preset 即表示信任它引用的全部插件行。
-- 若从 GitHub 安装,pnpm 会要求你在 `pnpm-workspace.yaml` 中 `allowBuilds` 授权构建脚本——这等于允许包代码在安装时于本机执行;建议锁定 commit(`github:<you>/dsh-programming-mode#<sha>`)。从 npm 或 tarball 安装的是预构建产物,无此门槛。
+- 若从 GitHub 安装,pnpm 会要求你在 `pnpm-workspace.yaml` 中 `allowBuilds` 授权构建脚本——这等于允许包代码在安装时于本机执行;建议锁定 commit(`github:ziduup/dsh-programming-mode#<sha>`)。从 npm 或 tarball 安装的是预构建产物,无此门槛。
 
 ## 自行构建 / 发布
 
