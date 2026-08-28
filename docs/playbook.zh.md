@@ -127,7 +127,7 @@ description:
   zh: '一句话中文描述。'                     # 全角冒号无碍,加引号亦可
 ```
 
-- 然后 **`npm ci && node scripts/generate-readme.mjs`,把重新生成的两个 README 与 YAML 一起提交**——CI(pr-check.yml)会逐字节比对,不重生成必红。
+- 然后 **`npm ci && node scripts/generate-readme.mjs`,把重新生成的两个 README 与 YAML 一起提交**——CI(pr-check.yml)会逐字节比对,不重生成必红。**新增条目和修改已有条目(哪怕只改一行描述)都一样**,生成器会同步 README 列表里该条目的 en/zh 描述。
 
 ### 4.2 Submission gate 反垃圾门槛(会失败两次的那种)
 
@@ -176,6 +176,19 @@ git -c http.proxy=http://127.0.0.1:8890 push origin main
 
 `git credential fill` 取本机 GCM 存储的 GitHub 凭证供 API 用(stdin 要喂 `protocol=https\nhost=github.com\n`,输出里 password 即 token;**绝不可打印**)。token 经典格式可直接 `Authorization: token <t>`。
 
+### 市场描述更新:改了 YAML 不重生成 README,CI 必红(真实踩过)
+
+PR #3564(更新 ziduup/dsh-programming-mode 的市场描述)只提交了 `data/plugins/ziduup__dsh-programming-mode.yml`,结果 `check` job 失败,日志只有一句:
+`README.md is out of sync with data/plugins/` / `README.zh.md is out of sync...`。
+
+**修复流程**(在 fork 克隆里):
+1. `npm ci`(该仓库 devDeps 只有 `js-yaml` + `marked`);
+2. `node scripts/generate-readme.mjs`(write 模式,重写 README.md / README.zh.md 的标记块);
+3. `git diff` **确认只动了自己条目的那两行**(生成器可能顺带动排序/其他内容,谨慎核对);
+4. 两个 README 与 YAML 一起提交,推 PR 分支 → CI 自动重跑并转绿。
+
+⚠️ CI 对 PR 的每次新提交都会重跑,推空提交也能触发重审;gate(Submission gate)与 README 同步(check)是两个独立 job,前者过了不代表后者不红。
+
 ### PowerShell 5.1 编码四坑
 
 1. `Invoke-RestMethod` 发含中文的 JSON 体默认按拉丁编码 → GitHub 上变成字面 `???`。**必须** `$bytes=[Text.Encoding]::UTF8.GetBytes($json); -Body $bytes -ContentType 'application/json; charset=utf-8'`(字节体彻底绕开转码);
@@ -211,13 +224,14 @@ git -c http.proxy=http://127.0.0.1:8890 push origin main
 |---|---|
 | 包 | `dsh-programming-mode` v0.2.1(14 技能 = 上游 v6.3.0 逐字节) |
 | GitHub | ziduup/dsh-programming-mode,topics: dsh/dsh-plugin/deepseek/agent-preset/superpowers |
-| 市场 | PR awesome-dsh-plugin#3006 已合并(2026-08-27,维护者 fkysly),站点与市场约一天内自动收录 |
+| 市场 | PR awesome-dsh-plugin#3006 已合并(2026-08-27,维护者 fkysly),站点与市场约一天内自动收录;PR #3564(描述同步 0.2.1)已提交,check+gate 双绿待合并 |
 | npm | 未发布(官网 403 待换出口;API 通道正常,登录后即可发) |
 | 本机 | 用户根 preset `programming` 已同步 v0.2.1 并带戳;profile 实体副本已同步,三处版本一致 |
 
 ## 八、待办移交
 
 - [x] PR awesome-dsh-plugin#3006 合并(2026-08-27);
+- [ ] PR awesome-dsh-plugin#3564(市场描述同步)合并后,确认市场页描述已更新;
 - [ ] 删除本仓库上层 `.tmp-awesome` 临时克隆(合并归档完毕即可删);
 - [ ] npm 出口恢复后:`npm login` → `pnpm publish` → 往本仓库提一个 `chore: 同步 npm 发布` 提交;
 - [ ] 后续上游出新版:走 §五流程,版本号按语义递增。
