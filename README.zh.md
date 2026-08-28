@@ -2,7 +2,7 @@
 
 [English below](#english) | 中文
 
-把 **编程模式**(Superpowers 工程纪律版标准模式)打包为 DeepSeek Harness 组合包(bundle),供他人一键安装。
+**编程模式**：一个 DeepSeek Harness 组合包(bundle)，在标准模式的全部能力之上，强制执行 Superpowers 工程纪律。一条命令即可安装。
 
 ## 这是什么
 
@@ -18,7 +18,7 @@
 8. **需求文档与开发计划一律用中文撰写**
 9. **首条消息强制注入 using-superpowers**：每个新会话的第一批请求里，`using-superpowers` 技能全文都会**机械地**出现在最前面（引擎注入，不依赖模型自觉调用 `skill` 工具），超极技能纪律从第一句就生效
 
-本包**捆绑了全部 14 个所需技能**(源自 [obra/superpowers](https://github.com/obra/superpowers),MIT,见 `preset/programming/skills/SKILLS-LICENSE.md`),接收方无需自备技能。
+本包**捆绑了全部 14 个所需技能**(源自 [obra/superpowers](https://github.com/obra/superpowers),MIT,见 `preset/programming/skills/SKILLS-LICENSE.md`),安装即用、无需自备技能。
 
 > **Superpowers 渊源**:本模式的工程纪律与捆绑的 14 个技能源自 [Superpowers 方法论](https://github.com/obra/superpowers)(MIT),逐字节同步自上游 v6.3.0,署名声明见 `preset/programming/skills/SKILLS-LICENSE.md`。
 
