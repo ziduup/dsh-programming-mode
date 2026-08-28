@@ -19,20 +19,17 @@
 
 本包**捆绑了全部 14 个所需技能**(源自 [obra/superpowers](https://github.com/obra/superpowers),MIT,见 `preset/programming/skills/SKILLS-LICENSE.md`),接收方无需自备技能。
 
-> **关于 Superpowers 命名**:本模式的工程纪律与捆绑技能全部源自 Superpowers 方法论。版本号保持常规三段式(`0.1.0`、`0.2.0`……),**不携带** superpowers 字样——Superpowers 渊源以本节与 `preset/programming/skills/SKILLS-LICENSE.md` 的声明为准。
+> **Superpowers 渊源**:本模式的工程纪律与捆绑的 14 个技能源自 [Superpowers 方法论](https://github.com/obra/superpowers)(MIT),逐字节同步自上游 v6.3.0,署名声明见 `preset/programming/skills/SKILLS-LICENSE.md`。
 
 ## 安装
 
 ```sh
-# 从 npm 发布后
-dsh plugin --profile web add dsh-programming-mode
+# 从 GitHub(推荐)
+dsh plugin --profile web add github:ziduup/dsh-programming-mode
 
-# 或从 GitHub
-dsh plugin --profile web add github:<you>/dsh-programming-mode
-
-# 或从本地目录 / tarball
+# 从本地目录 / tarball
 dsh plugin --profile web add ./dsh-programming-mode
-dsh plugin --profile web add ./dsh-programming-mode-0.1.0.tgz
+dsh plugin --profile web add ./dsh-programming-mode-<版本>.tgz
 ```
 
 安装后重启该 profile,模式选择器里即出现 **编程模式**。

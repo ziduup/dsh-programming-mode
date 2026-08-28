@@ -191,12 +191,13 @@ description:
 |---|---|
 | 包 | `dsh-programming-mode` v0.2.0(14 技能 = 上游 v6.3.0 逐字节) |
 | GitHub | ziduup/dsh-programming-mode,topics: dsh/dsh-plugin/deepseek/agent-preset/superpowers |
-| 市场 | PR awesome-dsh-plugin#3006,gate 全绿,待维护者合并 |
+| 市场 | PR awesome-dsh-plugin#3006 已合并(2026-08-27,维护者 fkysly),站点与市场约一天内自动收录 |
 | npm | 未发布(官网 403 待换出口;API 通道正常,登录后即可发) |
 | 本机 | 用户根 preset `programming` 已同步 v0.2.0 并带戳 |
 
 ## 八、待办移交
 
-- [ ] PR #3006 合并后:删除本仓库上层 `.tmp-awesome` 临时克隆;
+- [x] PR awesome-dsh-plugin#3006 合并(2026-08-27);
+- [ ] 删除本仓库上层 `.tmp-awesome` 临时克隆(合并归档完毕即可删);
 - [ ] npm 出口恢复后:`npm login` → `pnpm publish` → 往本仓库提一个 `chore: 同步 npm 发布` 提交;
 - [ ] 后续上游出新版:走 §五流程,版本号按语义递增。

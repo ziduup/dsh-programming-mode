@@ -19,8 +19,6 @@ A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) **bundle**
 
 ```sh
 dsh plugin --profile web add github:ziduup/dsh-programming-mode
-# or from npm once published:
-dsh plugin --profile web add dsh-programming-mode
 ```
 
 Restart the profile; the 编程模式 preset then appears in the mode picker. At profile boot the installer plants the bundled preset into the roster's first user-trust preset root — version-stamped, idempotent between equal versions, and it never touches directories it did not plant. Uninstalling the bundle does not delete a planted preset.
