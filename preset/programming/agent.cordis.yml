@@ -128,8 +128,12 @@
 # first pre-step the hook resolves `using-superpowers` and appends its full
 # content to the entering batch — the skill is mechanically present before the
 # model replies, independent of whether the model calls the `skill` tool. The
-# durable-history guard (source kind skill-invocation + this name) keeps it
-# once per session and idempotent across resume/compaction. Rows here are
+# message's durable source uses `kind: plugin` with
+# `plugin: @deepseek-ai/dsh-programming-mode`, so the UI's context-injection
+# row is labeled with that producer name (same family as
+# @deepseek-ai/dsh-system-prompt) instead of the raw skill name; the guard
+# matches both this shape and the older `skill-invocation` shape, keeping one
+# injection per session and idempotent across resume/compaction. Rows here are
 # agent-plane; the hook's event dispatch is scoped to this preset's agents.
 - id: force-superpowers
   name: dsh-programming-mode

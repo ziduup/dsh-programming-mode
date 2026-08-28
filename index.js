@@ -147,7 +147,13 @@ export function apply(ctx, config = {}) {
 }
 
 const SKILL_NAME = 'using-superpowers'
-const INJECTION_SOURCE = { kind: 'skill-invocation', name: SKILL_NAME, form: 'instructions' }
+// UI provenance: source.kind === 'plugin' shows record.plugin as the producer
+// label (same family as '@deepseek-ai/dsh-system-prompt'), instead of the raw
+// skill name. Keep `name` on the side for machine-readable identity.
+const PRODUCER_LABEL = '@deepseek-ai/dsh-programming-mode'
+function injectionSource(label) {
+	return { kind: 'plugin', plugin: label, name: SKILL_NAME, form: 'instructions' }
+}
 
 /**
  * Replicate `@deepseek-ai/dsh-skill`'s `renderSkillContent` inline instead of
@@ -185,17 +191,20 @@ function renderSkillContent(skill) {
 
 /**
  * Whether this agent's durable session history already carries the forced
- * injection (or an equivalent user-gesture skill load with the same source
- * shape). Scans from the tail so a resume/compaction stays idempotent.
+ * injection. Matches either our current `plugin`-kind shape or the earlier
+ * `skill-invocation` shape, so an upgrade in the middle of a session stays
+ * idempotent (a session that already received the old shape is not injected
+ * again by the new shape).
  */
-function alreadyInjected(agent) {
+function alreadyInjected(agent, label) {
 	const events = agent.session.events
 	if (!Array.isArray(events)) return false
 	for (let i = events.length - 1; i >= 0; i -= 1) {
 		const event = events[i]
 		if (event.type !== 'user/message') continue
 		const src = event.data?.source
-		if (src?.kind === INJECTION_SOURCE.kind && src.name === SKILL_NAME) return true
+		if (src?.kind === 'plugin' && src.plugin === label) return true
+		if (src?.kind === 'skill-invocation' && src.name === SKILL_NAME) return true
 	}
 	return false
 }
@@ -208,11 +217,12 @@ function alreadyInjected(agent) {
  */
 function registerFirstStepInjection(ctx, config = {}) {
 	const skillName = config.skillName ?? SKILL_NAME
+	const label = config.producerLabel ?? PRODUCER_LABEL
 	ctx.on('agent/pre-step', async ({ agent, signal }, next) => {
 		const decision = await next()
 		if (decision.kind === 'reject') return decision
 		signal.throwIfAborted()
-		if (alreadyInjected(agent)) return decision
+		if (alreadyInjected(agent, label)) return decision
 		const skills = ctx.get('skills')
 		if (!skills) return decision
 		const skill = await skills.get(skillName, {
@@ -226,7 +236,7 @@ function registerFirstStepInjection(ctx, config = {}) {
 			id: `forced:${skillName}:${agent.id ?? 'session'}`,
 			role: 'user',
 			content: [{ type: 'text', text: renderSkillContent(skill) }],
-			source: { ...INJECTION_SOURCE, name: skillName },
+			source: injectionSource(label),
 		}
 		console.log(`[dsh-programming-mode] forced first-step injection of "${skillName}" for agent ${agent.id ?? '?'}`)
 		return { kind: 'enter', messages: [...decision.messages, message] }
