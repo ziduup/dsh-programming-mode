@@ -164,6 +164,14 @@ description:
 - 开 PR:`POST /repos/{upstream}/pulls`,`head: "<user>:<branch>"`。
 - 注意:这样产生的远程提交哈希与本地不同(时间戳所致),下次真正 git push 前先 fetch + 对齐。
 
+**先查代理再走 API 镜像**:本机系统代理开着(`HKCU\...\Internet Settings` 的 `ProxyEnable=1` + `ProxyServer=127.0.0.1:8890`)时,浏览器/`Invoke-WebRequest`(走 WinINET 代理)通,而 git 默认**直连**被 reset——表现为"iwr 能 200、git push 却 Connection reset"。直接让 git 走同一代理即可,无需镜像:
+
+```powershell
+git -c http.proxy=http://127.0.0.1:8890 push origin main
+```
+
+强制 `GIT_HTTP_VERSION=HTTP/1.1` 无效(直连就是不通,与 HTTP 版本无关)。判断方法:`Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'` 看 `ProxyEnable`/`ProxyServer`。
+
 ### 凭证
 
 `git credential fill` 取本机 GCM 存储的 GitHub 凭证供 API 用(stdin 要喂 `protocol=https\nhost=github.com\n`,输出里 password 即 token;**绝不可打印**)。token 经典格式可直接 `Authorization: token <t>`。
