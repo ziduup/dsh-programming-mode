@@ -14,6 +14,7 @@ A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) **bundle**
 6. Verification before completion, evidence over assertions (`verification-before-completion`)
 7. Code review on significant work (`requesting-code-review` / `receiving-code-review`)
 8. Requirement and plan documents written in Chinese for user audit
+9. The full `using-superpowers` skill is mechanically injected into a new session's very first request batch (engine-level, independent of whether the model calls the `skill` tool), so the discipline applies from the first sentence
 
 ## Install
 

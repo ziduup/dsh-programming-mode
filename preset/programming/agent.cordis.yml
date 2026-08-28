@@ -121,6 +121,21 @@
 - id: tool-skill
   name: '@deepseek-ai/dsh-tool-skill'
 
+# First-step forced skill injection. This row mounts the bundle's own package
+# ('dsh-programming-mode', resolvable in the profile that installed the bundle)
+# with `role: force-superpowers`, so its apply() registers only the
+# agent/pre-step hook instead of re-running the installer. On a session's
+# first pre-step the hook resolves `using-superpowers` and appends its full
+# content to the entering batch — the skill is mechanically present before the
+# model replies, independent of whether the model calls the `skill` tool. The
+# durable-history guard (source kind skill-invocation + this name) keeps it
+# once per session and idempotent across resume/compaction. Rows here are
+# agent-plane; the hook's event dispatch is scoped to this preset's agents.
+- id: force-superpowers
+  name: dsh-programming-mode
+  config:
+    role: force-superpowers
+
 # ── goals ───────────────────────────────────────────────────────────────────
 
 # Only the model-facing tool. The goal SERVICE, its session driver, and the

@@ -16,6 +16,13 @@
 // Uninstalling the bundle does NOT delete a planted preset: it already lives
 // in the user's own writable root and may carry their edits. Deleting the
 // directory removes the mode.
+//
+// Dual role: the same package is also mounted as a preset row
+// (`config.role: force-superpowers`, see preset/programming/agent.cordis.yml)
+// that only registers the `agent/pre-step` hook injecting the full
+// using-superpowers skill on a session's first step. Instance dispatch is by
+// row id, so the profile-level installer row and the preset-level fork row can
+// share this one entry point.
 
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
@@ -119,7 +126,15 @@ export function plantPreset(options = {}) {
 	return { action: 'updated', from: stamped, to: version, targetDir }
 }
 
-export function apply(ctx) {
+export function apply(ctx, config = {}) {
+	// Preset-level fork row: this instance only forces the first-step skill
+	// injection; it must not plant anything (the installer row owns planting).
+	if (config.role === 'force-superpowers') {
+		registerFirstStepInjection(ctx, config)
+		return
+	}
+
+	// Installer role (profile patch row): plant the bundled preset.
 	let agentPresets
 	try {
 		agentPresets = ctx.get('agentPresets')
@@ -129,4 +144,91 @@ export function apply(ctx) {
 	const result = plantPreset({ agentPresets })
 	const detail = result.reason ?? (result.action === 'updated' ? `${result.from} -> ${result.to}` : result.version ?? '')
 	console.log(`[dsh-programming-mode] ${result.action}${detail ? `: ${detail}` : ''}`)
+}
+
+const SKILL_NAME = 'using-superpowers'
+const INJECTION_SOURCE = { kind: 'skill-invocation', name: SKILL_NAME, form: 'instructions' }
+
+/**
+ * Replicate `@deepseek-ai/dsh-skill`'s `renderSkillContent` inline instead of
+ * importing it: the bundle is a self-contained npm package with no runtime
+ * dependency on DSH internals. The output matches the canonical
+ * `<skill_content>` shape the `skill` tool produces, so the model sees the same
+ * framing whether the skill was loaded via the tool or forced by this hook.
+ * @param {object} skill - resolved skill (name/provider/resourceBase/content).
+ */
+function renderSkillContent(skill) {
+	const base = skill.resourceBase
+	let hint
+	if (base === undefined) {
+		hint = [`Resources for this skill are managed by provider "${String(skill.provider)}".`, 'Load referenced resources only as needed.']
+	} else if (base.kind === 'directory') {
+		hint = [`Base directory for this skill: ${String(base.path)}`, 'Resolve relative paths mentioned by this skill against the base directory before using them. Load referenced resources only as needed.']
+	} else if (base.kind === 'url') {
+		hint = [`Base URL for this skill: ${String(base.url)}`, 'Resolve relative URLs mentioned by this skill against the base URL before using them. Load referenced resources only as needed.']
+	} else {
+		hint = [`Resources for this skill: ${String(base.description)}`, 'Load referenced resources only as needed.']
+	}
+	const nameAttr = String(skill.name).replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;')
+	return [
+		`<skill_content name="${nameAttr}">`,
+		'<skill_resources>',
+		...hint,
+		'</skill_resources>',
+		'',
+		'<skill_instructions>',
+		skill.content,
+		'</skill_instructions>',
+		'</skill_content>',
+	].join('\n')
+}
+
+/**
+ * Whether this agent's durable session history already carries the forced
+ * injection (or an equivalent user-gesture skill load with the same source
+ * shape). Scans from the tail so a resume/compaction stays idempotent.
+ */
+function alreadyInjected(agent) {
+	const events = agent.session.events
+	if (!Array.isArray(events)) return false
+	for (let i = events.length - 1; i >= 0; i -= 1) {
+		const event = events[i]
+		if (event.type !== 'user/message') continue
+		const src = event.data?.source
+		if (src?.kind === INJECTION_SOURCE.kind && src.name === SKILL_NAME) return true
+	}
+	return false
+}
+
+/**
+ * Preset-level fork: on every agent's first pre-step where the skill resolves,
+ * inject the full `using-superpowers` content into the entering message batch.
+ * This is a mechanical guarantee — the skill instructions reach the model with
+ * the first request regardless of whether the model calls the `skill` tool.
+ */
+function registerFirstStepInjection(ctx, config = {}) {
+	const skillName = config.skillName ?? SKILL_NAME
+	ctx.on('agent/pre-step', async ({ agent, signal }, next) => {
+		const decision = await next()
+		if (decision.kind === 'reject') return decision
+		signal.throwIfAborted()
+		if (alreadyInjected(agent)) return decision
+		const skills = ctx.get('skills')
+		if (!skills) return decision
+		const skill = await skills.get(skillName, {
+			cwd: agent.session.header.cwd,
+			signal,
+			scope: agent,
+		})
+		signal.throwIfAborted()
+		if (!skill?.content) return decision
+		const message = {
+			id: `forced:${skillName}:${agent.id ?? 'session'}`,
+			role: 'user',
+			content: [{ type: 'text', text: renderSkillContent(skill) }],
+			source: { ...INJECTION_SOURCE, name: skillName },
+		}
+		console.log(`[dsh-programming-mode] forced first-step injection of "${skillName}" for agent ${agent.id ?? '?'}`)
+		return { kind: 'enter', messages: [...decision.messages, message] }
+	})
 }

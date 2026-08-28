@@ -3,6 +3,12 @@
 本项目的所有重要变更记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.2.1] - 2026-08-27
+
+### 新增
+
+- **首条消息强制注入 `using-superpowers`**：预设组合新增 `force-superpowers` 行（同一安装器包以 `role: force-superpowers` 挂载），在会话的第一次 `agent/pre-step` 把 `using-superpowers` 技能全文机械追加进第一批请求——不依赖模型是否自觉调用 `skill` 工具。每会话只注入一次（按持久历史去重），内容实时取自当前技能视图（编程模式下为捆绑副本，customSkillDirs 优先级最高）。`index.js` 的 `apply` 现按 `config.role` 分流：安装器角色行为不变，`force-superpowers` 角色只注册注入钩子。
+
 ## [0.2.0] - 2026-08-25
 
 ### 变更

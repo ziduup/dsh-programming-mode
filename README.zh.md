@@ -16,6 +16,7 @@
 6. 完成前必须跑验证(verification-before-completion)
 7. 重要工作请求代码审查(requesting/receiving-code-review)
 8. **需求文档与开发计划一律用中文撰写**
+9. **首条消息强制注入 using-superpowers**：每个新会话的第一批请求里，`using-superpowers` 技能全文都会**机械地**出现在最前面（引擎注入，不依赖模型自觉调用 `skill` 工具），超极技能纪律从第一句就生效
 
 本包**捆绑了全部 14 个所需技能**(源自 [obra/superpowers](https://github.com/obra/superpowers),MIT,见 `preset/programming/skills/SKILLS-LICENSE.md`),接收方无需自备技能。
 

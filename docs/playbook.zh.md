@@ -189,7 +189,7 @@ description:
 
 | 项 | 值 |
 |---|---|
-| 包 | `dsh-programming-mode` v0.2.0(14 技能 = 上游 v6.3.0 逐字节) |
+| 包 | `dsh-programming-mode` v0.2.1(14 技能 = 上游 v6.3.0 逐字节) |
 | GitHub | ziduup/dsh-programming-mode,topics: dsh/dsh-plugin/deepseek/agent-preset/superpowers |
 | 市场 | PR awesome-dsh-plugin#3006 已合并(2026-08-27,维护者 fkysly),站点与市场约一天内自动收录 |
 | npm | 未发布(官网 403 待换出口;API 通道正常,登录后即可发) |
