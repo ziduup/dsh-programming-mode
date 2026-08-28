@@ -16,11 +16,11 @@
 6. 完成前必须跑验证(verification-before-completion)
 7. 重要工作请求代码审查(requesting/receiving-code-review)
 8. **需求文档与开发计划一律用中文撰写**
-9. **首条消息强制注入 using-superpowers**：每个新会话的第一批请求里，`using-superpowers` 技能全文都会**机械地**出现在最前面（引擎注入，不依赖模型自觉调用 `skill` 工具），超极技能纪律从第一句就生效
+9. **首条消息强制注入 using-superpowers**：新会话的第一条请求前自动注入技能全文，纪律从第一句就生效
 
-本包**捆绑了全部 14 个所需技能**(源自 [obra/superpowers](https://github.com/obra/superpowers),MIT,见 `preset/programming/skills/SKILLS-LICENSE.md`),安装即用、无需自备技能。
+本包**捆绑了全部 14 个所需技能**,安装即用、无需自备技能。
 
-> **Superpowers 渊源**:本模式的工程纪律与捆绑的 14 个技能源自 [Superpowers 方法论](https://github.com/obra/superpowers)(MIT),逐字节同步自上游 v6.3.0,署名声明见 `preset/programming/skills/SKILLS-LICENSE.md`。
+> **Skills 归属**:捆绑的 14 个技能源自 [Superpowers 方法论](https://github.com/obra/superpowers)(MIT),署名声明见 `preset/programming/skills/SKILLS-LICENSE.md`。
 
 ## 安装
 
@@ -35,9 +35,9 @@ dsh plugin --profile web add ./dsh-programming-mode-<版本>.tgz
 
 安装后重启该 profile,模式选择器里即出现 **编程模式**。
 
-## 工作原理与植入策略
+## 升级行为
 
-一个 bundle 无法直接注册 agent preset 根(启动器会把 `agent-presets` 的 `roots` 配置固定为随附根目录),所以本包在 profile 启动时把捆绑的 preset 目录**植入** roster 第一个 user 信任根(默认 `$DSH_HOME/.agent-presets/`)。roster 每次 `list()` 重新扫描,植入即生效。
+安装后在 profile 启动时,本包将捆绑的 preset 目录植入 roster 的第一个用户根(默认 `$DSH_HOME/.agent-presets/`)。升级按版本戳判断:
 
 | 目标目录状态 | 行为 |
 |---|---|
@@ -59,21 +59,10 @@ dsh plugin --profile web remove dsh-programming-mode
 - agent preset 与 shell 访问权限同级:安装本 preset 即表示信任它引用的全部插件行。
 - 若从 GitHub 安装,pnpm 会要求你在 `pnpm-workspace.yaml` 中 `allowBuilds` 授权构建脚本——这等于允许包代码在安装时于本机执行;建议锁定 commit(`github:ziduup/dsh-programming-mode#<sha>`)。从 npm 或 tarball 安装的是预构建产物,无此门槛。
 
-## 自行构建 / 发布
+## 自行构建
 
 ```sh
-pnpm pack          # 产出 tarball,可直接分发
-pnpm publish       # 发布到 npm(先确认包名可用或加 scope)
-```
-
-`files` 字段只发布 `index.js`、`cordis.patch.yml`、`preset/`;`scripts/` 是开发工具,不随包分发。
-
-## 开发验证
-
-```sh
-node scripts/dry-run.mjs   # 四种植入策略的 dry-run(临时沙箱)
-dsh plugin --profile <test> add ./
-dsh --profile <test> --dump-config   # 应看到 "# == dsh-programming-mode" 层
+pnpm pack   # 产出 tarball,可用 dsh plugin add ./dsh-programming-mode-<版本>.tgz 安装
 ```
 
 ## 作者
