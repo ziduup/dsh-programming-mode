@@ -28,6 +28,6 @@ jobs:
               if (!y.includes(must)) { console.error('missing: ' + must); process.exit(1); }
             }
             const skills = fs.readdirSync('preset/programming/skills').filter(n => !n.endsWith('.md'));
-            if (skills.length !== 14) { console.error('expected 14 bundled skills, got ' + skills.length); process.exit(1); }
-            console.log('composition rows OK, 14 skills bundled');
+            if (skills.length !== 20) { console.error('expected 20 bundled skills, got ' + skills.length); process.exit(1); }
+            console.log('composition rows OK, 20 skills bundled');
           "

@@ -15,6 +15,7 @@ A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) **bundle**
 7. Code review on significant work (`requesting-code-review` / `receiving-code-review`)
 8. Requirement and plan documents written in Chinese for user audit
 9. The full `using-superpowers` skill is mechanically injected into a new session's very first request batch (engine-level, independent of whether the model calls the `skill` tool), so the discipline applies from the first sentence
+10. Always-on code-volume discipline (Ponytail): the 7-rung minimal-code ladder (YAGNI → reuse → stdlib → native → installed dependency → one line → minimum) runs at default `full` intensity in the persona every turn; it governs implementation volume only and never overrides the process rules above. The user can switch with "ponytail lite/ultra" or turn it off with "stop ponytail".
 
 ## Install
 
@@ -26,7 +27,7 @@ Restart the profile; the 编程模式 preset then appears in the mode picker. At
 
 ## Self-contained
 
-All fourteen required workflow skills ship inside the preset (`preset/programming/skills/`, derived from [obra/superpowers](https://github.com/obra/superpowers), MIT — see [skills attribution](preset/programming/skills/SKILLS-LICENSE.md)). You need nothing in your own skill roots; the bundled copy outranks user skill roots by provider rank, so same-named local skills are shadowed cleanly instead of conflicting.
+All twenty required workflow skills ship inside the preset (`preset/programming/skills/`): fourteen derived from [obra/superpowers](https://github.com/obra/superpowers) and six from [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail), both MIT — see [skills attribution](preset/programming/skills/SKILLS-LICENSE.md). You need nothing in your own skill roots; the bundled copy outranks user skill roots by provider rank, so same-named local skills are shadowed cleanly instead of conflicting.
 
 ## Trust note
 

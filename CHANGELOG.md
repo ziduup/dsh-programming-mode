@@ -3,6 +3,18 @@
 本项目的所有重要变更记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.3.0] - 2026-09-01
+
+### 新增
+
+- **捆绑 Ponytail 代码量纪律（6 个技能）**：`ponytail`、`ponytail-review`、`ponytail-audit`、`ponytail-debt`、`ponytail-gain`、`ponytail-help` 随 preset 一并植入（源自 [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail)，MIT，逐字节对齐上游 `skills/`），捆绑技能总数 14 → 20。
+- **persona 常驻代码量纪律（第 9 条规则）**：7 级阶梯（YAGNI→复用→stdlib→原生→已有依赖→一行→最少可用）每轮注入系统提示，默认 `full` 强度；明确边界——只管实现代码量，头脑风暴/计划/TDD/系统化调试/验证/审查/中文文档仍归 Superpowers 流程，ladder 永不裁掉信任边界校验、防数据丢失、安全、可访问性；TDD 迭代内 ladder 只作用于 GREEN 步。用户可 `ponytail lite/ultra` 切换、"停止 ponytail" 关闭。
+- **授权与文档同步**：`SKILLS-LICENSE.md` 新增 Ponytail 段落（14→20），README 中英更新人设规则与技能数。
+
+### 说明
+
+- 版本戳驱动的升级语义：0.2.1 → 0.3.0 会覆盖既有植入的 preset 并保留用户未改动的本地文件（见设计说明第 2 节）。
+
 ## [0.2.1] - 2026-08-27
 
 ### 新增
