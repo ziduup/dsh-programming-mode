@@ -1,6 +1,6 @@
 # dsh-programming-mode (Programming Mode bundle)
 
-[![Listed on dsh-plugin.org](https://dsh-plugin.org/badges/listed.svg)](https://dsh-plugin.org/plugins/ziduup/dsh-programming-mode)
+[![Listed on dsh-plugin.org](https://dsh-plugin.org/badges/listed.svg)](https://dsh-plugin.org/plugins/ziduup/dsh-programming-mode) [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fziduup%2Fdsh-programming-mode%2Fmain%2Fpackage.json&query=$.version&label=version&color=blue)](CHANGELOG.md) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 English summary — 完整文档见 [README.zh.md](README.zh.md)。
 
