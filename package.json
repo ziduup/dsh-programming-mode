@@ -1,5 +1,5 @@
 {
-  "name": "dsh-programming-mode",
+  "name": "@ziduup/dsh-programming-mode",
   "version": "0.3.0",
   "description": "DeepSeek Harness 编程模式组合包：标准模式之上强制执行 Superpowers 工程纪律（TDD、系统化调试、先计划后编码、完成前验证、代码审查），常驻 Ponytail 代码量纪律，内置全套 superpowers 与 ponytail 技能，dsh plugin add 一键安装。",
   "author": {
@@ -26,6 +26,9 @@
     "agent-preset",
     "superpowers"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"

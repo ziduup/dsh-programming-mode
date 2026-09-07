@@ -22,6 +22,10 @@ A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) **bundle**
 ## Install
 
 ```sh
+# from npm (recommended, registry channel)
+dsh plugin --profile web add @ziduup/dsh-programming-mode
+
+# from GitHub (git direct install)
 dsh plugin --profile web add github:ziduup/dsh-programming-mode
 ```
 

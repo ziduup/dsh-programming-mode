@@ -38,7 +38,10 @@
 ## 安装
 
 ```sh
-# 从 GitHub（推荐）
+# 从 npm（推荐，registry 通道更稳）
+dsh plugin --profile web add @ziduup/dsh-programming-mode
+
+# 从 GitHub（git 直装）
 dsh plugin --profile web add github:ziduup/dsh-programming-mode
 
 # 从本地目录 / tarball
