@@ -3,6 +3,12 @@
 本项目的所有重要变更记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.3.1] - 2026-09-07
+
+### 变更
+
+- **`subagent-driven-development` 实施者模板追加 Harness notes**：`implementer-prompt.md` 文末新增 `## Harness notes (this harness only)` 节，转译上游模板"ask questions"措辞为本 harness 可执行的 decide-and-record 协议——根因是本 harness 的 `send_message` 只能在子代理下一回合送达，回合内提问会死锁。报告模板同步新增 `## Decisions I made` 段，作为控制器裁决环的审计面。仅追加一节、未改动上游既有段落，下次升级覆盖时这一节需保留。属 vendor divergence（与上游逐字节对齐策略的局部偏离）。
+
 ## [0.3.0] - 2026-09-01
 
 ### 新增

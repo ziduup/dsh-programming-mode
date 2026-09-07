@@ -152,3 +152,80 @@ Subagent (general-purpose):
     Use BLOCKED if you cannot complete the task. Use NEEDS_CONTEXT if you need
     information that wasn't provided. Never silently produce work you're unsure about.
 ```
+
+---
+
+## Harness notes (this harness only)
+
+This section is a harness-specific adaptation of the upstream
+`implementer-prompt.md`. The upstream template, used verbatim elsewhere,
+still tells implementers to "ask questions" before starting or while
+working. In **this harness**, that instruction is unreachable:
+`send_message` only delivers to a subagent on its next turn, so a
+mid-turn question blocks until the controller's next turn — and a
+question that needs a same-turn answer costs the whole task. This
+section rewrites the contract so the controller's Rulings loop can do
+its job without a deadlock.
+
+### Mid-turn Q&A is unavailable in this harness
+
+- **Do not pause to ask the controller a question mid-task.** A question
+  in your final message or report is fine — the controller reads it on
+  its next turn. A question you hold open waiting for a same-turn reply
+  is a deadlock.
+- The "Before You Begin / Ask them now" and "While you work / ask
+  questions" lines inherited from the upstream template are dead text
+  in this harness. Follow this section instead.
+
+### Decision-and-record protocol
+
+When something is unclear, do not ask. Pick the smallest reasonable
+interpretation that keeps the spec binding, implement it, and record
+the decision in your report under `## Decisions I made` (one line each:
+what you decided, why, and what it costs if wrong). The task review
+audits that list; conflicts become ruled findings in the fix loop.
+
+The four situations below are the only ones where you stop and return
+`BLOCKED` or `NEEDS_CONTEXT` instead of deciding:
+
+- **Brief internally contradicts itself.** Two requirements in the brief
+  cannot both be satisfied. Quote the two passages in your final message.
+- **Brief contradicts the spec.** A brief requirement conflicts with a
+  binding global constraint. Quote both verbatim.
+- **Required interface does not exist and the brief does not authorize
+  you to create it.** State which earlier task or interface is missing
+  and quote the brief line that scopes your work.
+- **Acceptance criteria cannot be evaluated within your task's scope.**
+  Explain why no test you can write here would prove the criterion met.
+
+Everything else — security details, naming, edge values, performance,
+YAGNI tradeoffs, file structure, error handling style — is a judgment
+call. Make it, record it, continue. The controller's review loop is the
+real Q&A channel.
+
+### Report format addition
+
+In addition to the report fields above, include this section near the
+top of your report (after `What you implemented`):
+
+```
+## Decisions I made
+- <decision> — <why> — <cost if wrong>
+```
+
+Empty list is a valid value — it means you found nothing ambiguous and
+followed the brief verbatim. The reviewer uses this list to spot
+implicit decisions that were never surfaced; an empty list there is a
+green flag, not a missing section.
+
+**Halt-and-report status, in your final message:**
+- `BLOCKED` for the four situations above. Put the specific passage,
+  the missing interface name, or the unverifiable criterion in the
+  final message itself — the controller acts on it directly.
+- `NEEDS_CONTEXT` when you know exactly which fact is missing (a file
+  path, a function signature, an exact value) and the brief did not
+  supply it.
+
+Use these sparingly. A running plan does not wait on a question; a
+halt that turns out to be solvable in five minutes of judgment is
+itself the failure mode this section prevents.
