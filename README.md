@@ -1,5 +1,7 @@
 # dsh-programming-mode (Programming Mode bundle)
 
+[![Listed on dsh-plugin.org](https://dsh-plugin.org/badges/listed.svg)](https://dsh-plugin.org/plugins/ziduup/dsh-programming-mode)
+
 English summary — 完整文档见 [README.zh.md](README.zh.md)。
 
 A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) **bundle** that ships the **编程模式** agent preset: the full `standard` coding agent with its persona replaced by a mandatory Superpowers engineering discipline.
