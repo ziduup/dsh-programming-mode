@@ -1,40 +1,83 @@
-# dsh-programming-mode (Programming Mode bundle)
+# dsh-programming-mode
 
 [![Listed on dsh-plugin.org](https://dsh-plugin.org/badges/listed.svg)](https://dsh-plugin.org/plugins/ziduup/dsh-programming-mode) [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fziduup%2Fdsh-programming-mode%2Fmain%2Fpackage.json&query=$.version&label=version&color=blue)](CHANGELOG.md) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-English summary — 完整文档见 [README.zh.md](README.zh.md)。
+[English](README.en.md) · 中文
 
-A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) **bundle** that ships the **编程模式** agent preset: the full `standard` coding agent with its persona replaced by a mandatory Superpowers engineering discipline.
+> **编程模式**：一个 DeepSeek Harness 组合包（bundle），在标准模式的全部能力之上强制执行 Superpowers 工程纪律。一条命令即可安装。
 
-## What it enforces
+## 目录
 
-1. Skills before action (`using-superpowers`)
-2. Design/brainstorming before building (`brainstorming`)
-3. Plans before code (`writing-plans` → `executing-plans`)
-4. Test-driven development, RED-GREEN-REFACTOR (`test-driven-development`)
-5. Systematic debugging, root cause first (`systematic-debugging`)
-6. Verification before completion, evidence over assertions (`verification-before-completion`)
-7. Code review on significant work (`requesting-code-review` / `receiving-code-review`)
-8. Requirement and plan documents written in Chinese for user audit
-9. The full `using-superpowers` skill is mechanically injected into a new session's very first request batch (engine-level, independent of whether the model calls the `skill` tool), so the discipline applies from the first sentence
-10. Always-on code-volume discipline (Ponytail): the 7-rung minimal-code ladder (YAGNI → reuse → stdlib → native → installed dependency → one line → minimum) runs at default `full` intensity in the persona every turn; it governs implementation volume only and never overrides the process rules above. The user can switch with "ponytail lite/ultra" or turn it off with "stop ponytail".
+- [这是什么](#这是什么)
+- [安装](#安装)
+- [升级行为](#升级行为)
+- [卸载](#卸载)
+- [安全与信任](#安全与信任)
+- [自行构建](#自行构建)
+- [作者与许可](#作者与许可)
 
-## Install
+## 这是什么
+
+编程模式 = 部署自带 `standard` 模式的全部能力 + 强制 Superpowers 工程纪律的人设：
+
+1. 行动前先查技能（using-superpowers）
+2. 创作前先头脑风暴（brainstorming），设计批准后才实现
+3. 多步任务先写计划（writing-plans → executing-plans）
+4. 实现走 TDD 红绿重构（test-driven-development）
+5. 调试先找根因（systematic-debugging）
+6. 完成前必须跑验证（verification-before-completion）
+7. 重要工作请求代码审查（requesting / receiving-code-review）
+8. **需求文档与开发计划一律用中文撰写**
+9. **首条消息强制注入 using-superpowers**：新会话的第一条请求前自动注入技能全文，纪律从第一句就生效
+10. **代码量纪律（Ponytail）常驻**：默认 full 强度，7 级阶梯（YAGNI → 复用 → stdlib → 原生 → 已有依赖 → 一行 → 最少可用）始终生效；只管实现代码量，不触碰上面的流程规则（测试 / 计划 / 验证 / 审查归 Superpowers），用户可说 "ponytail lite/ultra" 或 "停止 ponytail" 调整
+
+本包**捆绑了全部 20 个所需技能**，安装即用、无需自备技能。
+
+> **技能归属**：捆绑的 20 个技能中，14 个源自 [Superpowers 方法论](https://github.com/obra/superpowers)（MIT），6 个源自 [Ponytail](https://github.com/DietrichGebert/ponytail)（MIT），署名声明见 `preset/programming/skills/SKILLS-LICENSE.md`。
+
+## 安装
 
 ```sh
+# 从 GitHub（推荐）
 dsh plugin --profile web add github:ziduup/dsh-programming-mode
+
+# 从本地目录 / tarball
+dsh plugin --profile web add ./dsh-programming-mode
+dsh plugin --profile web add ./dsh-programming-mode-<版本>.tgz
 ```
 
-Restart the profile; the 编程模式 preset then appears in the mode picker. At profile boot the installer plants the bundled preset into the roster's first user-trust preset root — version-stamped, idempotent between equal versions, and it never touches directories it did not plant. Uninstalling the bundle does not delete a planted preset.
+安装后重启该 profile，模式选择器里即出现 **编程模式**。
 
-## Self-contained
+## 升级行为
 
-All twenty required workflow skills ship inside the preset (`preset/programming/skills/`): fourteen derived from [obra/superpowers](https://github.com/obra/superpowers) and six from [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail), both MIT — see [skills attribution](preset/programming/skills/SKILLS-LICENSE.md). You need nothing in your own skill roots; the bundled copy outranks user skill roots by provider rank, so same-named local skills are shadowed cleanly instead of conflicting.
+安装后在 profile 启动时，本包将捆绑的 preset 目录植入 roster 的第一个用户根（默认 `$DSH_HOME/.agent-presets/`）。升级按版本戳判断：
 
-## Trust note
+| 目标目录状态 | 行为 |
+|---|---|
+| 不存在 | 全新植入，写入版本戳 |
+| 版本戳 == 本包版本 | 无操作（**保留你的本地修改**） |
+| 版本戳 != 本包版本 | 覆盖文件并刷新版本戳（升级） |
+| 存在但无版本戳 | **拒绝触碰**（不是我们植入的，可能是你手写的同名 preset） |
 
-An agent preset carries the same authority as shell access. Installing one means trusting every plugin row it references — review `agent.cordis.yml` before installing someone else's build.
+## 卸载
 
-## License
+```sh
+dsh plugin --profile web remove dsh-programming-mode
+```
 
-MIT © 子都 (ziduup). Bundled skills retain their upstream MIT terms with attribution in `SKILLS-LICENSE.md`.
+卸载组合包**不会删除**已植入的 preset——它已属于你的用户目录、可能含你的修改。不需要时手动删除 `$DSH_HOME/.agent-presets/programming/` 即可。
+
+## 安全与信任
+
+- agent preset 与 shell 访问权限同级：安装本 preset 即表示信任它引用的全部插件行。
+- 若从 GitHub 安装，pnpm 会要求你在 `pnpm-workspace.yaml` 中 `allowBuilds` 授权构建脚本——这等于允许包代码在安装时于本机执行；建议锁定 commit（`github:ziduup/dsh-programming-mode#<sha>`）。从 npm 或 tarball 安装的是预构建产物，无此门槛。
+
+## 自行构建
+
+```sh
+pnpm pack   # 产出 tarball，可用 dsh plugin add ./dsh-programming-mode-<版本>.tgz 安装
+```
+
+## 作者与许可
+
+子都（[ziduup](https://github.com/ziduup)）· 仓库：[ziduup/dsh-programming-mode](https://github.com/ziduup/dsh-programming-mode) · [MIT](LICENSE)

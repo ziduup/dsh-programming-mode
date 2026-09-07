@@ -7,7 +7,7 @@
 // list() re-reads the roots), so the preset appears in the mode picker right
 // after this plugin has planted it.
 //
-// Planting policy (deliberate, documented in README.zh.md):
+// Planting policy (deliberate, documented in README.md):
 // - target absent            -> plant fresh, write version stamp
 // - stamp matches our version-> no-op (preserve local edits)
 // - stamp differs (upgrade)  -> overwrite files, refresh stamp
