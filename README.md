@@ -65,7 +65,7 @@ dsh plugin --profile web add ./dsh-programming-mode-<版本>.tgz
 ## 卸载
 
 ```sh
-dsh plugin --profile web remove dsh-programming-mode
+dsh plugin --profile web remove @ziduup/dsh-programming-mode
 ```
 
 卸载组合包**不会删除**已植入的 preset——它已属于你的用户目录、可能含你的修改。不需要时手动删除 `$DSH_HOME/.agent-presets/programming/` 即可。

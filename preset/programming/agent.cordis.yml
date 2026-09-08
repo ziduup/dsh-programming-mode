@@ -124,8 +124,8 @@
   name: '@deepseek-ai/dsh-tool-skill'
 
 # First-step forced skill injection. This row mounts the bundle's own package
-# ('dsh-programming-mode', resolvable in the profile that installed the bundle)
-# with `role: force-superpowers`, so its apply() registers only the
+# ('@ziduup/dsh-programming-mode', resolvable in the profile that installed
+# the bundle) with `role: force-superpowers`, so its apply() registers only the
 # agent/pre-step hook instead of re-running the installer. On a session's
 # first pre-step the hook resolves `using-superpowers` and appends its full
 # content to the entering batch — the skill is mechanically present before the
@@ -137,8 +137,13 @@
 # matches both this shape and the older `skill-invocation` shape, keeping one
 # injection per session and idempotent across resume/compaction. Rows here are
 # agent-plane; the hook's event dispatch is scoped to this preset's agents.
+# `name` must be the INSTALLED package name — since v0.3.0 that is
+# @ziduup/dsh-programming-mode, not the pre-rename `dsh-programming-mode`.
+# Quote it: a bare `@` is a reserved YAML indicator, so an unquoted
+# `name: @ziduup/...` would make the whole composition unparseable
+# (the roster reports it broken and the picker hides it).
 - id: force-superpowers
-  name: dsh-programming-mode
+  name: '@ziduup/dsh-programming-mode'
   config:
     role: force-superpowers
 

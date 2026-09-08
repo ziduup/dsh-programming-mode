@@ -1,9 +1,13 @@
-# dsh bundle patch for dsh-programming-mode.
+# dsh bundle patch for @ziduup/dsh-programming-mode.
 # Inserts one HOST plugin row: at profile boot its apply() plants the bundled
 # 编程模式 preset directory into the roster's first user-trust preset root
 # (by default $DSH_HOME/.agent-presets/). A preset cannot ride a bundle as a
 # composition root (the launcher pins the agent-presets `roots` config), so
 # distribution works by planting files into the writable user root instead.
+# NOTE: `name` must be the INSTALLED package name (@ziduup/dsh-programming-mode
+# since v0.3.0; it was `dsh-programming-mode` before the rename). The loader
+# imports this specifier from the profile's node_modules — a stale bare name
+# makes the whole profile tree fail to boot (ERR_MODULE_NOT_FOUND).
 - insert:
     - id: programming-mode-installer
-      name: 'dsh-programming-mode'
+      name: '@ziduup/dsh-programming-mode'

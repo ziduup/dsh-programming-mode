@@ -3,6 +3,13 @@
 本项目的所有重要变更记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.3.3] - 2026-09-08
+
+### 修复
+
+- **v0.3.0 改名后 `cordis.patch.yml` 仍以旧包名 `dsh-programming-mode` 插入 loader 行**：包自 v0.3.0 起更名为 `@ziduup/dsh-programming-mode`，但 bundle patch 的 `name:` 与预设 `force-superpowers` 行的 `name:` 仍是改名前的裸包名，导致通过插件市场/`dsh plugin add` 安装 v0.3.x 后，profile 启动时 loader 以 `Cannot find package 'dsh-programming-mode'` 整体失败（`ERR_MODULE_NOT_FOUND`，`dsh web` 无法启动）。已将两处 `name:` 改为 `@ziduup/dsh-programming-mode`。卸载命令同步更正。
+- **预设 `force-superpowers` 行的 `name:` 必须加引号**：`@` 是 YAML 保留指示符，裸写 `name: @ziduup/dsh-programming-mode` 会使预设组合文件无法解析（roster 将其标记为 broken、模式选择器不显示）。已改为 `name: '@ziduup/dsh-programming-mode'`。
+
 ## [0.3.1] - 2026-09-07
 
 ### 变更
