@@ -27,9 +27,9 @@ dsh --profile test --dump-config
 ## 目录结构
 
 ```
-index.js            # 启动植入器：plantPreset() 四条策略 + apply()
+index.js            # 启动植入器：plantPreset() 四条策略 + apply()（纯植入角色）
 cordis.patch.yml    # bundle patch：insert 安装器行
-preset/programming/ # 植入的 preset 本体（组合 + 元数据 + 14 个捆绑技能）
+preset/programming/ # 植入的 preset 本体（组合 + force-superpowers.mjs 注入模块 + 元数据 + 20 个捆绑技能）
 scripts/dry-run.mjs # 植入策略离线测试
 ```
 

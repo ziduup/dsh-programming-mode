@@ -3,6 +3,17 @@
 本项目的所有重要变更记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.3.4] - 2026-09-20
+
+### 修复
+
+- **卸载 bundle 后已植入的 preset 变成死 preset**：`force-superpowers` 行此前以包名 `@ziduup/dsh-programming-mode` 挂载，包被 `dsh plugin remove` 移除后，凡是记录过 `programming` 的会话在 resume 时都会以 `ERR_MODULE_NOT_FOUND` 失败（表面症状：模型/模式操作报 `internal: resume failed for session ...`）。修复方式：注入实现随 preset 一起落盘（新增 `preset/programming/force-superpowers.mjs`，组合行改为相对路径 `./force-superpowers.mjs`），植入的 preset 自此**自包含**——卸载 bundle 后仍可正常挂载、首条 using-superpowers 注入照常生效；`index.js` 随之退化为纯植入器（`role: force-superpowers` 分流删除）。
+
+### 说明
+
+- 版本戳 0.3.3 → 0.3.4：profile 下次启动会把既有植入目录覆盖为新组合（本地修改仍按既有策略处理）。
+- **一键卸载（墓碑式）**：pnpm `remove` 不执行任何被卸载包的生命周期钩子，市场也没有卸载事件，bundle 在卸载后没有代码机会自行清理。清理由植入的 preset 自己完成——`force-superpowers.mjs` 在每次 host 启动挂载时检查所有 profile 的 package.json，无人再引用本包即原地转换为**墓碑**：组合替换为 dsh 自带标准模式的组合、元数据改名「编程模式（已卸载）」、捆绑技能移除。不能直接删除目录：会话永久记录其所属 preset，而 host 对「preset 不存在」的 resume 硬失败、无回退，直接删除会让全部历史会话无法打开（本机实测 256 个会话受影响）。墓碑让历史会话照常打开（以标准模式行为运行），重装本包时 installer 检测墓碑标记自动重种完整模式；`uninstall.mjs` 保留为立即转换/彻底清除（带安装戳校验）的手动入口。
+
 ## [0.3.3] - 2026-09-08
 
 ### 修复

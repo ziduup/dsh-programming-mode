@@ -29,7 +29,19 @@ dsh plugin --profile web add @ziduup/dsh-programming-mode
 dsh plugin --profile web add github:ziduup/dsh-programming-mode
 ```
 
-Restart the profile; the 编程模式 preset then appears in the mode picker. At profile boot the installer plants the bundled preset into the roster's first user-trust preset root — version-stamped, idempotent between equal versions, and it never touches directories it did not plant. Uninstalling the bundle does not delete a planted preset.
+Restart the profile; the 编程模式 preset then appears in the mode picker. At profile boot the installer plants the bundled preset into the roster's first user-trust preset root — version-stamped, idempotent between equal versions, and it never touches directories it did not plant. The planted copy is self-contained: its only bundle-owned row (`force-superpowers`) ships inside the preset directory as `./force-superpowers.mjs`, so it never holds a dangling reference to the bundle, and it removes itself at the next boot once no profile installs the bundle anymore (see Uninstall).
+
+## Uninstall
+
+```sh
+dsh plugin --profile web remove @ziduup/dsh-programming-mode
+```
+
+Uninstalling is complete on its own — no manual cleanup. pnpm (what `dsh plugin remove` forwards to) runs no lifecycle hooks of removed packages and the market dispatches no uninstall events, so cleanup is done by the planted preset itself at every host boot: when no profile's package.json references this package anymore, it converts itself into a **tombstone** — the composition is replaced with a copy of dsh's shipped standard preset (rows reference packages by name, needing nothing from this bundle) and the metadata is relabeled to 编程模式（已卸载）. The reason: sessions permanently record the preset they ran under, and the host hard-fails a resume whose preset is missing with no fallback — deleting the directory outright would make every recorded session unopenable. The tombstone keeps history openable (running with standard-mode behavior) at the cost of one honestly-labeled picker entry; once you no longer need those sessions, delete the directory (or run the uninstaller). Reinstalling the bundle repairs the tombstone into the full mode automatically. To convert immediately without waiting for a restart:
+
+```sh
+node ~/.dsh/.agent-presets/programming/uninstall.mjs
+```
 
 ## Self-contained
 

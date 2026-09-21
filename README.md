@@ -62,13 +62,19 @@ dsh plugin --profile web add ./dsh-programming-mode-<版本>.tgz
 | 版本戳 != 本包版本 | 覆盖文件并刷新版本戳（升级） |
 | 存在但无版本戳 | **拒绝触碰**（不是我们植入的，可能是你手写的同名 preset） |
 
+植入副本是**自包含**的：本包对 preset 的唯一注入点 `force-superpowers` 行挂载 preset 目录内的相对模块 `./force-superpowers.mjs`，不依赖本包名（也不会 import 本包），不会出现"悬空引用导致会话无法 resume"。
+
 ## 卸载
 
 ```sh
 dsh plugin --profile web remove @ziduup/dsh-programming-mode
 ```
 
-卸载组合包**不会删除**已植入的 preset——它已属于你的用户目录、可能含你的修改。不需要时手动删除 `$DSH_HOME/.agent-presets/programming/` 即可。
+卸载即完成，**无需手动清理**。pnpm（`dsh plugin remove` 的真身）不执行被卸载包的任何生命周期钩子，市场也没有卸载事件，因此清理由植入的 preset 自己在每次 host 启动挂载时完成：当所有 profile 的 package.json 都不再引用本包（即已被卸载），它会把自己转换成**墓碑**——组合替换为 dsh 自带标准模式的组合（按包名引用，不依赖本包）、元数据改名为「编程模式（已卸载）」。这样设计的原因：会话会永久记录它运行时所属的 preset，而 host 对「preset 不存在」的会话 resume 直接报错、无回退——直接删除目录会让所有历史会话打不开。墓碑保证历史会话照常可打开（以标准模式行为运行），选择器里只剩一个诚实标注的条目；不需要历史会话时，手动删除该目录（或运行卸载器）即可彻底清除。重装本包后，installer 检测到墓碑标记会自动重种完整模式。想立即转换（不等重启）：
+
+```sh
+node ~/.dsh/.agent-presets/programming/uninstall.mjs
+```
 
 ## 安全与信任
 
