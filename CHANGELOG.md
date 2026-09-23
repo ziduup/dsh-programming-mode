@@ -3,6 +3,21 @@
 本项目的所有重要变更记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.3.5] - 2026-09-23
+
+### 修复
+
+- **首条 using-superpowers 注入让整个会话无法打开**：`force-superpowers` 往 `user/message` 事件写的 `source` 多带了一个 `name` 成员（`{ kind:'plugin', plugin:'@deepseek-ai/dsh-programming-mode', name:'using-superpowers', form:'instructions' }`）。而 `@deepseek-ai/dsh-session-format-v0-to-v1` 对 `kind:'plugin'` 的来源只承认 `kind`/`plugin`/`form`/`sections`/`summary`，`name` 不在其中，于是 v0 日志迁移被硬拒，报 `refuses this format v0 Session: user/message N source has unexpected member "name"`，web 界面表现为「历史加载失败」。已删除该成员——`{ kind:'plugin', plugin:'@deepseek-ai/dsh-programming-mode', form:'instructions' }` 在合法成员表内，且 `alreadyInjected()` 的去重分支 `src.kind === 'plugin' && src.plugin === label` 依旧命中，UI 上仍显示生产者标签，行为不变。
+
+### 新增
+
+- **声明 `engines.dsh`**：市场插件卡片上的「DSH ^x.y.z」徽标由 `dshmarket` 的 `deriveHostCompatibility()` 推导，来源优先级为顶层 `engines.dsh` > `dsh.engines.dsh` > `@deepseek-ai/dsh-*` 的 peerDependencies 范围。本包此前三者皆无，因此卡片上不显示任何 DSH 版本信息，兼容性判定只能是 `unknown`。现声明 `>=0.1.3-alpha.2`：实测修复后的 source 形状在 `dsh-session-format-v0-to-v1` 全部 10 个已发布版本（0.1.3-alpha.2 → 0.1.7-alpha.2）上均通过校验，而带 `name` 的旧形状在同样 10 个版本上全部被拒——旧形状从未在任何已发布版本上合法，它只可能来自该包独立发布前的 0.1.0-rc.x 时代（未取到样本，故以此为下限）。
+
+### 说明
+
+- 版本戳 0.3.4 → 0.3.5：植入器检测到版本戳不一致，profile 下次启动会覆盖既有植入的 preset。**这是本修复生效的必然路径**——若只有本地改动而无新版本，重装或升级 bundle 时会把带 `name` 的旧文件重新植入，故障复现。
+- 已写坏的历史会话不会自愈：修复只阻止新会话产生坏记录。本机实测 171 个会话受影响，需另行处理（逐帧重压缩，删掉那一个成员）。
+
 ## [0.3.4] - 2026-09-20
 
 ### 修复

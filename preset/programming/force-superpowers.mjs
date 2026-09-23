@@ -40,7 +40,10 @@ export const name = 'programming-mode-force-superpowers'
 const SKILL_NAME = 'using-superpowers'
 // UI provenance: source.kind === 'plugin' shows record.plugin as the producer
 // label (same family as '@deepseek-ai/dsh-system-prompt'), instead of the raw
-// skill name. Keep `name` on the side for machine-readable identity.
+// skill name. The core's v0->v1 session-format validator admits only
+// kind/plugin/form/sections/summary on a plugin source, so no extra member
+// can ride along — dsh-session-format-v0-to-v1 rejects the whole log with
+// "source has unexpected member" and the session becomes unloadable.
 const PRODUCER_LABEL = '@deepseek-ai/dsh-programming-mode'
 
 function deleteStamped(dir) {
@@ -145,7 +148,7 @@ export function uninstallSelf(dir = here) {
 }
 
 function injectionSource(label) {
-	return { kind: 'plugin', plugin: label, name: SKILL_NAME, form: 'instructions' }
+	return { kind: 'plugin', plugin: label, form: 'instructions' }
 }
 
 /**
