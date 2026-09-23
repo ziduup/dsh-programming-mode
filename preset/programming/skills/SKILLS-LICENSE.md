@@ -1,25 +1,25 @@
 # Bundled Skills — Attribution & License
 
-This preset bundles 20 skill directories under `skills/`: 14 from [obra/superpowers](https://github.com/obra/superpowers) and 6 from [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail).
+This preset bundles 21 skill directories under `skills/`: 15 from [obra/superpowers](https://github.com/obra/superpowers) and 6 from [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail).
 
-## Superpowers (14)
+## Superpowers (15)
 
 - **Origin:** [obra/superpowers](https://github.com/obra/superpowers) (Jesse Vincent / Human Layer)
-- **Upstream version:** v6.3.0 (released 2026-08-12) — copied **verbatim** from the upstream `skills/` directory; the bundle tracks upstream one-to-one.
+- **Upstream version:** v6.4.1 — copied **verbatim** from the upstream `skills/` directory; the bundle tracks upstream one-to-one.
 - **License:** MIT — bundled here under the terms of the MIT License; upstream copyright and license notices remain within each skill directory where present, and this notice serves as the attribution required by that license.
-- **Modifications:** none to skill content. Directory list refreshed at bundle v0.2.0: `writing-skills` added; `development-loop` removed (dropped by upstream).
+- **Modifications:** none to skill content, with one documented exception: `subagent-driven-development/implementer-prompt.md` carries an appended `## Harness notes (this harness only)` section (a harness-specific adaptation, not upstream content) — see CHANGELOG 0.3.1. Directory list refreshed at bundle v0.4.0: `diagnosing-superpowers` added (new in upstream v6.4.x). Earlier refreshes: v0.2.0 added `writing-skills`, removed `development-loop` (dropped by upstream).
 
 ## Ponytail (6)
 
 - **Origin:** [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) (Dietrich Gebert)
-- **Source:** copied **verbatim** from the upstream `skills/` directory of the `ponytail` repository; the bundle tracks upstream's `skills/` one-to-one (the compact ladder that the persona embeds comes from upstream's `.clinerules/ponytail.md`).
+- **Source:** copied **verbatim** from the upstream `skills/` directory of the `ponytail` repository; the bundle tracks upstream's `skills/` one-to-one (the compact ladder that the persona embeds comes from upstream's `.clinerules/ponytail.md`). Verified against upstream v4.10.0 — all six are byte-identical, so no update was needed.
 - **License:** MIT — bundled here under the terms of the MIT License; upstream copyright and license notices remain within each skill directory where present, and this notice serves as the attribution required by that license.
 - **Modifications:** none to skill content.
 
-## Bundled skills (20)
+## Bundled skills (21)
 
-brainstorming · dispatching-parallel-agents · executing-plans ·
-finishing-a-development-branch · receiving-code-review ·
+brainstorming · diagnosing-superpowers · dispatching-parallel-agents ·
+executing-plans · finishing-a-development-branch · receiving-code-review ·
 requesting-code-review · subagent-driven-development ·
 systematic-debugging · test-driven-development · using-git-worktrees ·
 using-superpowers · verification-before-completion · writing-plans ·

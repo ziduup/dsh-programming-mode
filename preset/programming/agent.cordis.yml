@@ -31,7 +31,10 @@
 - id: persona
   name: '@deepseek-ai/dsh-persona'
   config:
-    text: |-
+    # `text` was renamed to `prefix` in @deepseek-ai/dsh-persona 0.1.5-rc.1;
+    # the old key is no longer in the schema, so a preset still using it fails
+    # schema validation and cannot mount at all.
+    prefix: |-
       You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.
 
       You are running in 编程模式 (Programming Mode): a disciplined engineering agent built on the Superpowers methodology. Process discipline in this mode is mandatory, not optional.

@@ -31,9 +31,9 @@
 9. **首条消息强制注入 using-superpowers**：新会话的第一条请求前自动注入技能全文，纪律从第一句就生效
 10. **代码量纪律（Ponytail）常驻**：默认 full 强度，7 级阶梯（YAGNI → 复用 → stdlib → 原生 → 已有依赖 → 一行 → 最少可用）始终生效；只管实现代码量，不触碰上面的流程规则（测试 / 计划 / 验证 / 审查归 Superpowers），用户可说 "ponytail lite/ultra" 或 "停止 ponytail" 调整
 
-本包**捆绑了全部 20 个所需技能**，安装即用、无需自备技能。
+本包**捆绑了全部 21 个所需技能**，安装即用、无需自备技能。
 
-> **技能归属**：捆绑的 20 个技能中，14 个源自 [Superpowers 方法论](https://github.com/obra/superpowers)（MIT），6 个源自 [Ponytail](https://github.com/DietrichGebert/ponytail)（MIT），署名声明见 `preset/programming/skills/SKILLS-LICENSE.md`。
+> **技能归属**：捆绑的 21 个技能中，15 个源自 [Superpowers 方法论](https://github.com/obra/superpowers)（MIT），6 个源自 [Ponytail](https://github.com/DietrichGebert/ponytail)（MIT），署名声明见 `preset/programming/skills/SKILLS-LICENSE.md`。
 
 ## 安装
 

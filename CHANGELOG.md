@@ -3,6 +3,22 @@
 本项目的所有重要变更记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.3.6] - 2026-09-23
+
+### 修复
+
+- **persona 行仍用已废弃的 `text` 键，preset 在 dsh-persona 0.1.5+ 上无法挂载**（issue #1）：`@deepseek-ai/dsh-persona` 自 0.1.5-rc.1 起把配置键 `text`（required）改名为 `prefix`（required）并新增 `suffix`，旧键不再位于 schema 内（现行 schema 为 `prefix` required、`suffix`/`complete`/`includeRuntimeContext` 带默认值）。捆绑模板 `agent.cordis.yml` 的 persona 行仍在用 `text: |-`，schema 校验报 `prefix missing required value`，整个 preset 挂载失败，表现为新建/切换到「编程模式」时报 loader 错误且指向 `agent.cordis.yml`。已把该行键名改为 `prefix: |-`，正文一字未动（前后均 4277 字符）。dsh 自带的 `standard`/`minimal`/`cordis`/`ptc` 早已改用 `prefix`。
+
+### 变更
+
+- **superpowers 捆绑技能升级 v6.3.0 → v6.4.1**：8 个技能内容更新（`brainstorming` 新增 "Establish Shared Understanding" 节并把审批门槛改为按阶段授权——"A reply approves the stage actually presented"；`executing-plans` 被上游重写为当前会话 inline 执行；`writing-plans` 新增 Review Focus 节；`writing-skills` 要求解释器调用捆绑脚本；`systematic-debugging`、`test-driven-development`、`using-superpowers`、`requesting-code-review` 同步更新），并新增 `diagnosing-superpowers`（session 出错后归因/报 bug 用）。捆绑技能数 20 → 21，README 中英与 `SKILLS-LICENSE.md` 同步。
+- **`subagent-driven-development/implementer-prompt.md` 的本地分歧已保留**：上游 v6.4.1 未改动该文件前 154 行，因此升级对该文件是净零变化；`## Harness notes (this harness only)` 追加段（77 行，防 mid-turn Q&A 死锁，见 0.3.1）逐字节保留。
+- **ponytail 无需更新**：6 个技能与上游 v4.10.0 逐字节一致，已是最新。persona 规则 9 内嵌的 7 级阶梯与上游 `.clinerules/ponytail.md` 一致。
+
+### 说明
+
+- 版本戳 0.3.5 → 0.3.6：persona 修复与技能升级都会随重新植入生效。0.3.5 已发布且不含本版改动，故发 0.3.6 而非改写 0.3.5。
+
 ## [0.3.5] - 2026-09-23
 
 ### 修复

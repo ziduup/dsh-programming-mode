@@ -45,7 +45,7 @@ node ~/.dsh/.agent-presets/programming/uninstall.mjs
 
 ## Self-contained
 
-All twenty required workflow skills ship inside the preset (`preset/programming/skills/`): fourteen derived from [obra/superpowers](https://github.com/obra/superpowers) and six from [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail), both MIT — see [skills attribution](preset/programming/skills/SKILLS-LICENSE.md). You need nothing in your own skill roots; the bundled copy outranks user skill roots by provider rank, so same-named local skills are shadowed cleanly instead of conflicting.
+All twenty-one required workflow skills ship inside the preset (`preset/programming/skills/`): fifteen derived from [obra/superpowers](https://github.com/obra/superpowers) and six from [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail), both MIT — see [skills attribution](preset/programming/skills/SKILLS-LICENSE.md). You need nothing in your own skill roots; the bundled copy outranks user skill roots by provider rank, so same-named local skills are shadowed cleanly instead of conflicting.
 
 ## Trust note
 
