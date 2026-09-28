@@ -3,6 +3,22 @@
 本项目的所有重要变更记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.3.7] - 2026-09-28
+
+### 修复
+
+- **preset 相对 `standard` 缺 4 行能力，编程模式并非"标准模式全部能力"**（外部 issue 逐行对比发现）：把 `agent.cordis.yml` 与本机 dsh-agent-presets 0.1.5-rc.2 的 `presets/standard/agent.cordis.yml` 逐 row（id / name / disabled / isolate / config）比对后确认，除刻意差异（persona、`skill-filesystem.customSkillDirs`、`force-superpowers` 新增行）外缺以下四项。四项均自初始提交即缺失（`git log -S` 对 `dsh-tool-present`、`command-goal`、`modelSelectionSettings` 均无记录，非回归），官方 `cordis`/`ptc`/`standard` 三个 preset 全都带这四项（仅 `minimal` 刻意不带），README "标准模式的全部能力" 的承诺此前并未完全兑现。已补齐：
+  - **补 `present` 行**（`@deepseek-ai/dsh-tool-present`）：此前该工具不注册，模型交付文件后无法"登记"，web 界面「交付物」面板在编程模式会话里永远为空（文件本身写成功，只是拿不到 `deliverables/presented` 事件）。
+  - **补 `command-goal` 行**（`@deepseek-ai/dsh-command-goal`）：此前 `/goal` 斜杠命令在编程模式会话里不存在，只能由模型侧 goal 工具操作目标（`tool-goal` 行本来就有）。
+  - **`tool-web` 的 `fetch: false` 改回 `fetch: true`**：`dsh-tool-web` 的 `apply()` 仅当 `resolved.fetch` 为真时调用 `applyWebFetchTool`，此前 `web_fetch` 整个不注册，且 `web_search` 提示语退化为"只看搜索摘要"变体；改回后与 standard 一致，可抓取网页全文。
+  - **`delegation` 组 `tool-subagent`（spawn）补 `modelSelectionSettings: true`**：`dsh-tool-subagent` 仅在该值为真时安装模型选择策略（注册 `list_subagent_models` 工具、`subagent` 工具描述追加 provider/model/reasoning_effort 选择说明），此前子代理只能继承父路由；fork 行 standard 同样刻意不设（保 KV cache 复用），保持不动。
+  - 补齐后重跑逐行 diff：除刻意的 persona、`customSkillDirs`、`force-superpowers` 外与 standard 零差异，行序也一致（`force-superpowers` 为刻意新增行，插在 `tool-skill` 之后）。
+
+### 说明
+
+- 版本戳 0.3.6 → 0.3.7：本版只加能力行、不动任何既有行为，按补丁发版。0.3.6 已发布且不含本版改动，故发 0.3.7 而非改写 0.3.6。
+- 目的 section 的注释随 `command-goal` 行同步改写：goal 服务与会话驱动仍在宿主面（Gateway 以 Remote endpoint 提供，entry-local realm 会遮蔽唯一的 `goals` 实例），但"/goal 命令留在宿主面"的旧表述已不成立。
+
 ## [0.3.6] - 2026-09-23
 
 ### 修复
