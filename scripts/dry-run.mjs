@@ -11,7 +11,7 @@
 
 import assert from 'node:assert/strict'
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { delimiter, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { plantPreset } from '../index.js'
 
@@ -22,6 +22,12 @@ mkdirSync(join(sandbox, 'root'), { recursive: true })
 // force-superpowers.mjs reads DSH_HOME at call time; point it at the sandbox
 // so the orphan check scans fake profiles, never the developer's real ones.
 process.env.DSH_HOME = join(sandbox, 'dsh-home')
+// locateShippedStandard also probes the RUNNING CLI via process.argv[1]; pin
+// it to a sandbox path so tests 7-9 stay hermetic no matter where this script
+// runs from (test 12 overrides it deliberately and restores the pin).
+const argvPin = join(sandbox, 'nothing', 'bin.js')
+const argvBackup = process.argv[1]
+process.argv[1] = argvPin
 const fakeProfileManifest = join(sandbox, 'dsh-home', 'profiles', 'web', 'package.json')
 mkdirSync(join(sandbox, 'dsh-home', 'profiles', 'web'), { recursive: true })
 writeFileSync(fakeProfileManifest, JSON.stringify({ name: 'dsh-profile-web', private: true, dependencies: { '@ziduup/dsh-programming-mode': 'file:./x.tgz' } }))
@@ -146,5 +152,47 @@ const manual = uninstallSelf()
 assert.equal(manual.action, 'removed')
 assert.ok(!existsSync(planted), 'planted preset survived its own uninstaller')
 console.log(`   planted dir removed via uninstall.mjs (v${manual.version}); foreign dir refused`)
+
+console.log('== 12. shipped-standard discovery: every supported layout ==')
+// (a) legacy layout inside the profiles tree (the shape test 9 plants).
+assert.equal(mod.locateShippedStandard(join(sandbox, 'dsh-home', 'profiles')), shippedStandard, 'legacy profiles-tree layout not discovered')
+console.log('   legacy profiles-tree layout discovered')
+// (b) 0.1.5-rc.x layout: the dsh package carries dsh-agent-presets as its own
+//     nested dependency inside a profile. Fresh home — (a)'s legacy dir would
+//     otherwise win the first-candidate ordering by design.
+const nestedStandard = join(sandbox, 'nested-home', 'profiles', 'web', 'node_modules', '@deepseek-ai', 'dsh', 'node_modules', '@deepseek-ai', 'dsh-agent-presets', 'presets', 'standard')
+mkdirSync(nestedStandard, { recursive: true })
+writeFileSync(join(nestedStandard, 'agent.cordis.yml'), standardComposition)
+assert.equal(mod.locateShippedStandard(join(sandbox, 'nested-home', 'profiles')), nestedStandard, 'nested dsh-agent-presets layout not discovered')
+console.log('   nested dsh-agent-presets layout discovered')
+// (c) running-CLI layout via the argv walk-up — the npm -g case that no
+//     profiles-tree scan can reach (the 0.3.7 tombstone gap).
+const fakeCliStandard = join(sandbox, 'fake-cli', 'node_modules', '@deepseek-ai', 'dsh-agent-presets', 'presets', 'standard')
+mkdirSync(join(sandbox, 'cli-home', 'profiles'), { recursive: true })
+mkdirSync(fakeCliStandard, { recursive: true })
+writeFileSync(join(fakeCliStandard, 'agent.cordis.yml'), standardComposition)
+process.argv[1] = join(sandbox, 'fake-cli', 'lib', 'bin.js')
+assert.equal(mod.locateShippedStandard(join(sandbox, 'cli-home', 'profiles')), fakeCliStandard, 'running-CLI layout not discovered from argv walk-up')
+console.log('   running-CLI layout discovered via argv walk-up')
+// (d) real-installation smoke: when a dsh CLI is actually on PATH (developer
+//     machine), discovery must hit its shipped standard; CI (no dsh) skips.
+process.argv[1] = argvBackup
+const shimDir = (process.env.PATH ?? '').split(delimiter).map((entry) => entry.trim()).filter(Boolean).find((dir) => existsSync(join(dir, process.platform === 'win32' ? 'dsh.cmd' : 'dsh')))
+if (shimDir !== undefined) {
+	const realRoot = process.platform === 'win32'
+		? join(shimDir, 'node_modules', '@deepseek-ai', 'dsh')
+		: join(shimDir, '..', 'lib', 'node_modules', '@deepseek-ai', 'dsh')
+	const realStandard = join(realRoot, 'node_modules', '@deepseek-ai', 'dsh-agent-presets', 'presets', 'standard')
+	if (existsSync(join(realStandard, 'agent.cordis.yml'))) {
+		process.argv[1] = join(realRoot, 'lib', 'bin.js')
+		assert.equal(mod.locateShippedStandard(join(sandbox, 'cli-home', 'profiles')), realStandard, 'real CLI installation not discovered via PATH shim')
+		console.log('   real installation discovered:', realStandard)
+	} else {
+		console.log('   dsh on PATH but without a bundled dsh-agent-presets at the expected layout; skipped')
+	}
+} else {
+	console.log('   no dsh CLI on PATH; real-installation smoke skipped (CI)')
+}
+process.argv[1] = argvPin
 
 console.log('== done; sandbox left at scripts/tmp-plant-test for inspection ==')

@@ -116,12 +116,59 @@ const TOMBSTONE_METADATA = [
 	'',
 ].join('\n')
 
-function locateShippedStandard(profilesDir) {
+/**
+ * Where dsh's shipped `standard` preset lives, tried in order:
+ *
+ * 1. inside the profiles tree (dsh installed into a profile) — both the legacy
+ *    `config/agent-presets` layout and the 0.1.5-rc.x layout where the dsh
+ *    package carries `dsh-agent-presets` as its own nested dependency;
+ * 2. the RUNNING CLI installation — a global `npm -g` install never puts
+ *    `@deepseek-ai/dsh` under the profiles tree, so the profiles scan alone
+ *    made the tombstone unreachable there (0.3.7 and earlier). The host's own
+ *    entry script (`process.argv[1]`, e.g. …/@deepseek-ai/dsh/lib/bin.js)
+ *    identifies the running installation; walk up to its package root and
+ *    probe the same layouts there.
+ *
+ * Exported for dry-run/testing. Returns the directory holding
+ * `agent.cordis.yml`, or undefined when nothing matches (the caller then
+ * refuses to tombstone — a missing shipped standard must keep the planted
+ * preset so recorded sessions stay resumable).
+ * @param {string} profilesDir - the `<dshHome>/profiles` directory.
+ */
+export function locateShippedStandard(profilesDir) {
 	const candidates = [join(profilesDir, 'node_modules', '@deepseek-ai', 'dsh', 'config', 'agent-presets', 'standard')]
 	for (const entry of readdirSync(profilesDir, { withFileTypes: true })) {
-		if (entry.isDirectory()) candidates.push(join(profilesDir, entry.name, 'node_modules', '@deepseek-ai', 'dsh', 'config', 'agent-presets', 'standard'))
+		if (entry.isDirectory()) {
+			candidates.push(join(profilesDir, entry.name, 'node_modules', '@deepseek-ai', 'dsh', 'config', 'agent-presets', 'standard'))
+			candidates.push(join(profilesDir, entry.name, 'node_modules', '@deepseek-ai', 'dsh', 'node_modules', '@deepseek-ai', 'dsh-agent-presets', 'presets', 'standard'))
+			candidates.push(join(profilesDir, entry.name, 'node_modules', '@deepseek-ai', 'dsh-agent-presets', 'presets', 'standard'))
+		}
+	}
+	const cliRoot = dshInstallRoot(process.argv?.[1])
+	if (cliRoot !== undefined) {
+		candidates.push(join(cliRoot, 'node_modules', '@deepseek-ai', 'dsh-agent-presets', 'presets', 'standard'))
+		candidates.push(join(cliRoot, 'config', 'agent-presets', 'standard'))
 	}
 	return candidates.find((candidate) => existsSync(join(candidate, 'agent.cordis.yml')))
+}
+
+/**
+ * Walk up from the host's entry script to the dsh package root: the first
+ * directory whose `node_modules` carries `dsh-agent-presets` with a shipped
+ * standard composition. Bounded depth so an unexpected argv cannot scan the
+ * whole drive; undefined when argv is not a file inside a dsh installation.
+ * @param {string | undefined} entryScript - `process.argv[1]` of the host.
+ */
+function dshInstallRoot(entryScript) {
+	if (typeof entryScript !== 'string' || entryScript.length === 0) return undefined
+	let dir = dirname(entryScript)
+	for (let depth = 0; depth < 8; depth += 1) {
+		if (existsSync(join(dir, 'node_modules', '@deepseek-ai', 'dsh-agent-presets', 'presets', 'standard', 'agent.cordis.yml'))) return dir
+		const parent = dirname(dir)
+		if (parent === dir) return undefined
+		dir = parent
+	}
+	return undefined
 }
 
 function tombstone(dir, shippedStandardDir) {

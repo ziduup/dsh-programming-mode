@@ -3,6 +3,23 @@
 本项目的所有重要变更记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.3.8] - 2026-09-28
+
+### 修复
+
+- **卸载后自动墓碑在全局安装 dsh 的机器上从不触发**：`force-superpowers.mjs` 的 `locateShippedStandard()` 此前只扫 `~/.dsh/profiles/**/node_modules/@deepseek-ai/dsh/config/agent-presets/standard`，而 `@deepseek-ai/dsh` 从不装进 profile（本机实测 profile 的 `@deepseek-ai/` 下只有 cosmokit + schemastery），且 0.1.5-rc.2 的 dsh 包内没有 `config/` 目录（presets 实际位于 `@deepseek-ai/dsh/node_modules/@deepseek-ai/dsh-agent-presets/presets/standard`）——查找路径与真实布局永不相交，`removeIfOrphaned()` 恒返回 `kept: shipped standard preset not found`，卸载后植入 preset 以完整形态滞留（2026-09-28 首次真实卸载踩中，此前 dry-run 测试 9 用注入的假路径掩盖了该盲区）。现改为按序探测四种布局：profiles 树内 legacy `config/agent-presets`、profile 内 dsh 包嵌套的 `dsh-agent-presets`、profile 内顶层 `dsh-agent-presets`，以及**运行中 CLI 安装**——从宿主入口脚本（`process.argv[1]`，如 `…/@deepseek-ai/dsh/lib/bin.js`）向上定界到 dsh 包根再探测（npm -g 全局安装由此命中）；任一命中即用，全部未命中仍安全保留（缺 standard 不建墓碑的兜底不变）。`locateShippedStandard` 转为具名导出供测试。
+
+### 变更
+
+- **dry-run 新增第 12 项：shipped-standard 发现的全布局断言**（legacy / profile 嵌套 / 运行中 CLI walk-up / 真实安装冒烟——PATH 上有 dsh shim 时断言真实 CLI 布局，CI 无 dsh 自动跳过），并把 `process.argv[1]` 钉到沙箱路径保证测试 7–9 不受宿主环境影响。
+- **README 中英卸载章节改为如实两段式**：第一段记录 bundles 悬空失败模式——`dsh plugin remove`（CLI 路径）实测会正确清理，但部分卸载路径不保证（本机出现一次悬空致启动 `cannot resolve profile bundle` 崩溃），workaround = 删 profile package.json 的一行；第二段保留墓碑设计说明，修正触发时机为「每次被挂载时（懒挂载，web 界面首次打开模式选择器或 resume 旧会话时触发）」，补充「选择器条目无法隐藏」（dsh preset 元数据暂无 hidden 字段）与 0.3.8 的全局安装修复说明。
+
+### 说明
+
+- 版本戳 0.3.7 → 0.3.8：植入的 `force-superpowers.mjs` 变更随重装/升级生效（重装时 installer 检测版本戳不一致整体覆盖）。0.3.7 已发布且不含本版改动，故发 0.3.8。
+- 本版不改 `agent.cordis.yml` 组合——0.3.7 的会话级验收结论（与 standard 27 工具对齐）继续有效。
+- 配套两份上游 issue 已起草待提交 deepseek-harness：① `dsh plugin remove` 不清 `dsh.profile.bundles` 导致卸载后启动崩；② `preset.yml` 元数据建议增加 `hidden` 字段（resume 可解析、选择器不列，墓碑场景刚需）。本版发布时两者均未提交。
+
 ## [0.3.7] - 2026-09-28
 
 ### 修复

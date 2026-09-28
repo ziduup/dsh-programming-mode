@@ -70,7 +70,11 @@ dsh plugin --profile web add ./dsh-programming-mode-<版本>.tgz
 dsh plugin --profile web remove @ziduup/dsh-programming-mode
 ```
 
-卸载即完成，**无需手动清理**。pnpm（`dsh plugin remove` 的真身）不执行被卸载包的任何生命周期钩子，市场也没有卸载事件，因此清理由植入的 preset 自己在每次 host 启动挂载时完成：当所有 profile 的 package.json 都不再引用本包（即已被卸载），它会把自己转换成**墓碑**——组合替换为 dsh 自带标准模式的组合（按包名引用，不依赖本包）、元数据改名为「编程模式（已卸载）」。这样设计的原因：会话会永久记录它运行时所属的 preset，而 host 对「preset 不存在」的会话 resume 直接报错、无回退——直接删除目录会让所有历史会话打不开。墓碑保证历史会话照常可打开（以标准模式行为运行），选择器里只剩一个诚实标注的条目；不需要历史会话时，手动删除该目录（或运行卸载器）即可彻底清除。重装本包后，installer 检测到墓碑标记会自动重种完整模式。想立即转换（不等重启）：
+卸载分两段，各有一个已知边界：
+
+**第一段（dsh 侧）：卸载后 bundles 列表可能悬空。** `dsh plugin remove`（CLI 路径，0.3.8 实测）会把依赖、node_modules、lockfile 和 `dsh.profile.bundles` 一起清干净，启动正常；但部分卸载路径不保证清 bundles——本机实测出现过一次卸载后 bundles 条目悬空（依赖已清、列表未清），下一次启动直接报错 `cannot resolve profile bundle "@ziduup/dsh-programming-mode"` 且整个 profile 拒绝启动。遇到该报错，手动删掉 profile `package.json` 里 `dsh.profile.bundles` 数组的那一行即可（只删这一行）。
+
+**第二段（本插件）：植入 preset 的墓碑化。** pnpm 不执行被卸载包的任何生命周期钩子，市场也没有卸载事件，因此清理由植入的 preset 自己在**每次被挂载时**完成——注意是懒挂载：web 界面首次打开模式选择器、或 resume 旧会话时，并非所有启动路径都会触发。当所有 profile 的 package.json 都不再引用本包（即已被卸载），它会把自己转换成**墓碑**——组合替换为 dsh 自带标准模式的组合（按包名引用，不依赖本包）、元数据改名为「编程模式（已卸载）」。这样设计的原因：会话会永久记录它运行时所属的 preset，而 host 对「preset 不存在」的会话 resume 直接报错、无回退——直接删除目录会让所有历史会话打不开。墓碑保证历史会话照常可打开（以标准模式行为运行），选择器里只剩一个诚实标注的条目（dsh 的 preset 元数据目前没有"从选择器隐藏"的字段，该条目无法不显示）；不需要历史会话时，手动删除该目录（或运行卸载器）即可彻底清除。重装本包后，installer 检测到墓碑标记会自动重种完整模式。0.3.8 起，standard 组合的定位会同时探测 profiles 树内安装与本机运行中的 dsh CLI（含 npm -g 全局安装）；更早版本在全局安装 dsh 的机器上自动墓碑不会触发，需手动转换。想立即转换（不等重启）：
 
 ```sh
 node ~/.dsh/.agent-presets/programming/uninstall.mjs
