@@ -3,6 +3,42 @@
 本项目的所有重要变更记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.4.0] - 2026-10-08
+
+> 首个支持 **dsh 0.2.0 桌面版**的版本。0.3.8 及更早只覆盖 0.1.x CLI / web profile；同一个包、同一份组合，安装器按宿主模型自动选通道。
+
+### 新增
+
+- **两条发现通道（桌面版支持）**：dsh 0.2.0 换成注册表模型，`dsh-agent-preset-registry` 只认 `AgentPresets.register()` 登记的条目，**整个运行时不读 preset 目录**——0.1.x 上赖以工作的目录植入，在桌面版上等于没发生，这正是「装完看不到编程模式」的根因。0.4.0 改为**一套组合、两条发现通道**：0.1.x 照旧植入 `$DSH_HOME/.agent-presets/programming/`；0.2.0+ 额外在**所在 profile 自己的 `cordis.patch.yml`** 里写一条标记块包住的 `- insert:` 声明行。两条通道共用同一份 `agent.cordis.yml`（声明行的 `plugins` 就是它整块右移 10 空格），不存在两份副本。通道由**组合树里的 preset 提供者包名**判定，不读 `agentPresets` 服务（实测插件 `apply()` 跑的那一刻该服务还没进 store）。
+- **卸载后自动结算：点一下就干净，没有第二步**：pnpm 不执行被卸载包的任何生命周期钩子、市场也没有卸载事件，所以结算由植入的 preset 自己做。**声明行按 profile 判**（哪个 profile 不再装本包就清哪个的行，与别的 profile 无关），**植入目录按全局判**（目录是同一 `$DSH_HOME` 下所有 profile 共享的，只有没有任何 profile 再装本包时才动）。清成什么样由**会话历史**决定：先扫 `<DSH_HOME>/sessions/**/session.v*.jsonl.zstd`（流式过 zstd、命中即停，找的正是宿主自己读的 `agentPreset` 字段）——**没有任何会话用过编程模式 → 行和目录一起删除**，选择器里彻底消失；**有会话用过 → 留一条「编程模式（已卸载）」墓碑**，那些会话照常打开（宿主对「preset 不存在」的 resume 硬失败、无回退）。两条路径都零手动动作。清理失败一律保守回退——读不到 registry、读不到会话日志、删目录被占用（宿主在 watch 技能目录）时退回「保持原样」或「墓碑」，绝不半途而废。
+- **`uninstall.mjs` 顺带摘声明行**：`declarationTargets()` 扫 `$DSH_HOME/profiles/*/cordis.patch.yml` 找我们的标记块（也可 `--patch <路径>` 指定），`uninstallDeclaration()` 只删我们那一块。
+
+### 修复
+
+- **桌面版选择器里没有「编程模式」——preset 登记成功但被判 `broken`**：0.2.0 注册表的 `list()` 会给每个 preset 附带 `broken` 字段（激活失败或行不可用时的诊断），选择器不列这类条目。用影子 profile 在真实 0.2.0 宿主上跑一个只读探针，拿到的是 `programming` 的 `broken: "tool-workflow …: waiting for workflowEngine / tool-ralph …: waiting for workflowEngine"`——声明行里的 `workflow-worker-thread`（0.1.5 时代的引擎提供者行）在桌面版上解析到 `$DSH_HOME/profiles/node_modules` 里那份 0.1.5 共享树，宿主按 peer 不兼容把它禁用，`workflowEngine` 于是没人提供，两行消费者一直等下去。**修复**：声明行（0.2.x 通道）按 0.2.0 的 `standard.patch.yml` 校正三处行漂移——`workflow-worker-thread` → `workflow-ptc`（`@deepseek-ai/dsh-workflow-ptc`）、`tool-ralph` 补 `disabled: true`、补上 0.2.0 新增的 `tool-plugin-manager`（disabled）。0.1.x 通道（植入目录 / CLI）继续用原组合：`dsh-workflow-ptc` 在 0.1.5 上不存在，两个通道因此必须分开校正，转换集中在 `declaration.mjs` 的 `HOST_0_2_ROW_FIXES`，仍是「一份组合、按宿主校正」。
+- **升级路径上的声明行丢了版本号**：`plantPreset` 的 `'updated'` 分支只返回 `{ from, to }`，而 `apply()` 交给声明行的是 `result.version`——真实 0.2.0 桌面宿主上做 0.3.8 → 0.4.0 升级时，标记块写成 `# >>> … declaration vundefined >>>`，此后每次启动都因 `hasBlock(text, version)` 不匹配而把同一份内容重写一遍。`'updated'` 现在同时返回 `version`。
+- **新 profile 的 patch 模板形状**（真实宿主上才发现，dry-run 测不到）：dsh 给新 profile 的 `cordis.patch.yml` 就是「注释 + `[]`」。往 `[]` 后面追加声明行得到 `[]` + `- insert:`，宿主 `yaml.load` 直接抛 `end of the stream or a document separator is expected`，**profile 在加载阶段就起不来**——自愈代码根本没机会跑。`replaceBlock` 现在把「没有行的补丁」当空文件处理：保留注释、去掉 `[]` 占位、只写块；`removeBlock` 反向还原成「注释 + `[]`」。实测还原结果与宿主编译模板逐字节一致。
+- **宿主探测读错了地方**（同上，真实宿主上才发现）：原实现用 `typeof agentPresets.register === 'function'` 判断宿主模型。实测在真实 0.1.5-rc.2 宿主上，插件 `apply()` 跑的那一刻只有 2/90 行有 fiber，`ctx.get('agentPresets')` 恒为 `undefined`，连等一个 `setImmediate` 都不出现；`entry.options.inject` 又会让条目静默停住（apply 根本不跑）。改用**读组合树**（`ctx.loader.entries()` 里的 preset 提供者包名），树在任何条目启动前就完整，服务退作第二意见。
+- **桌面版能选到「编程模式」，但一选中本轮运行就失败：`format v4 message requires a producer-owned source kind`**：`force-superpowers` 给首条 `using-superpowers` 注入的 `source` 用的是 `{ kind: 'plugin', plugin: '@deepseek-ai/dsh-programming-mode', form: 'instructions' }`。`kind: 'plugin'` 是 v0–v3 时代的形状，**日志格式 v4 已把它废弃**：v4 的准入只要求 `kind` 是非空字符串且不等于 `'plugin'`（`dsh-session-format-v3-to-v4` 的 `assertV4SourceRowAdmission`），写入（编码器）与读取（行准入、artifact 校验）三条路径都会硬拒——这条注入既写不进日志也读不出来，`user/message` 一落盘整轮就失败。0.1.x 通道不受影响（它写 v0–v3 日志），所以只有 0.2.0 桌面版会撞上。**修复**：改用宿主自己的 skill-invocation 形状 `{ kind: 'skill-invocation', name: <技能名>, form: 'instructions' }`——就是 `@deepseek-ai/dsh-skill` 给 `skill` 工具那份 `<skill_content>` 挂的同一个记录，成员恰好是 v0→v1 校验器为这个 kind 承认的三个（`kind`/`name`/`form`，一个不多一个不少），v0 到 v4 每个已发布的校验器都放行；UI 的上下文注入行因此显示技能名。`alreadyInjected()` 保留两种历史形状的匹配（≤0.3.8 的 `plugin` 形状、0.3.4 之前的 `skill-invocation`），升级中途的会话不会被注入第二次。
+- **卸载必须「点一下就干净」：从某个 profile 卸载后，那个 profile 里的模式却照样完整可用**。原孤儿检查只看**全局**（`$DSH_HOME/profiles/*/package.json` 里只要还有**任何**一个 profile 装着本包就判 `kept`），真机实测返回 `kept: installer still installed in profile web`——于是桌面版卸载后它的声明行原封不动，模式照跑，用户看到的就是「卸载了还能选编程模式」。修复见上「新增」第二条。
+- **墓碑分两级，绝不动别人还在用的东西**：只给被卸载的那个 profile 写墓碑行，共享目录保持完整模式；只有全局也孤儿时才处理目录。
+
+### 变更
+
+- **卸载安全性是结构性的，不靠时序**：声明行**从不引用本包名**，只引用宿主自带包（`@deepseek-ai/dsh-agent-preset`、standard 组合里的 `@deepseek-ai/*`）和植入在 `$DSH_HOME/.agent-presets/` 下的文件（pnpm 不动用户数据）。所以 `dsh plugin remove` 之后这一行照样能激活，历史会话的 resume 不会遇到 `agent-preset/not-found` / `agent-preset/invalid`。
+- **墓碑按宿主持久化通道分两种形态**，共用同一个孤儿检查：0.2.0 上换掉 profile patch 里那一行（改用宿主自带 standard 组合，经注册表的 `readDocument('standard')` 读取，不猜文件布局）；0.1.x 上重写植入目录。0.1.x 的 standard 定位沿用 0.3.8 的四布局探测链。
+- **dry-run 扩到 26 项**：新增 7b/7c/11b（卸载结算的三条路径——按 profile 无历史删行、按 profile 有历史只墓碑化本 profile 的行、全局无历史删目录并摘掉所有 profile 的声明行，且「别的 preset 的会话」不算历史）、14b（新 profile 模板形状的声明/删除往返）、17b（宿主无法作答时墓碑拒绝半应用）、18b/18c（无 name 元数据拒绝、卸载器摘行）、19（**用宿主自己的解析器当裁判**——PATH 上有 dsh 时把 `loadOptionalPatches` import 进来喂我们生成的每一种 patch 形状，CI 无 dsh 自动跳过）；13–18 覆盖声明行生成不变量、patch 生命周期、非 list 拒绝、0.1.x 自愈、0.2.0 墓碑与半应用拒绝、`apply()` 双通道；6 断言注入 source 的成员恰为 `kind`/`name`/`form`（多带成员会像 0.3.5 那样打死旧日志），对三种历史形状各验一次去重，并验证无关技能的注入不会误判为「已注入」；12 覆盖 shipped-standard 发现的四种布局。
+- **`package.json` 的 `files` 去掉已搬走的根级 `declaration.mjs`**（它现在位于 `preset/programming/`，随 `preset` 一起发布）。
+- **README 中英 / design / faq / playbook 同步**：安装后可能需要重启两次（0.2.0 第一次启动负责写行，选择器要等下一次启动）；卸载改为如实三段式（bundles 悬空 / preset 自动结算 / 0.2.0 声明行本身）；单 profile 卸载与墓碑语义；补安装后看不到模式的 0.2.0 专属排查步骤。安装段另写明**命令只有 `dsh plugin add` 一种形态**——dsh 是 pnpm 的转发层，「npm 渠道」指的是包的来源而非 `npm install`，手工 `pnpm add` 不会调和 `dsh.profile.bundles`（层栈不更新，模式不出现）；并标注 0.4.0 起支持桌面版及桌面版的市场安装路径。
+
+### 说明
+
+- 版本戳 0.3.8 → 0.4.0：`preset/programming/declaration.mjs` 是新文件、`index.js` 与 `force-superpowers.mjs` 都有实质变更，须发新版（植入副本随重装/升级生效）。
+- 本版不改 `agent.cordis.yml` 组合内容——0.3.7 的会话级验收结论（与 standard 27 工具对齐）继续有效（0.2.0 宿主上的三处行漂移在本版声明行里校正）。
+- 真实宿主验证分三轮。**0.1.5-rc.2 CLI + 一次性 profile**：安装 / 不写行 / 有注册表行时写行 / 两步降级自愈 / **卸载后重启无异常** / 墓碑 / 墓碑后 roster 判 `broken: none` / web profile 回归，结束后该 profile 已删除、植入 preset 已还原。**0.2.0-rc.2 桌面宿主 + 桌面 profile 的影子副本**：CLI 仍拒绝 `--profile desktop`（`profile "desktop" is managed exclusively by the Electron application`），故用同 `package.json`、同 patch、`node_modules` 走目录联接（junction）的影子 profile，由桌面版自己的 `dsh.cmd` 启动——实测宿主 `updated: 0.3.8 -> 0.4.0`、把声明行写进 profile patch、组合树里出现 `preset-programming`（与宿主自带四个 preset 行并列），探针在**真实注册表**上读到 `programming|编程模式|order=10`；同一次验证也暴露了当时的组合在 0.2.0 上被判 `broken`（根因与修复见上）。**卸载结算双路径**：在隔离 `$DSH_HOME` 的影子 profile 上「装 → 模拟卸载（从 manifest 去掉依赖）→ 重启」，无历史与有历史各跑一次，判定标准是行与目录的实际状态。
+- v4 报错的可复现验证方法：先用探针把 `force-superpowers` 真跑一遍，拿到它真正发出的那条 message，再喂给**桌面版自带的 0.2.0-rc.2 内核**（从 `app.asar` 里 import 它自己的 `dsh-session-format-v3-to-v4`，跑 `encodeEvent` / `assertV4RowAdmission` / `assertReleasedV4Relationships` 三条路径）。修复前三条路径全部复现用户看到的原文报错；修复后三条全部放行，且 0.1.5 共享树里 v0→v1、v2→v3 两代校验器同样承认新形状。
+- 已知边界：0.2.0 桌面 profile 被某个会话占用时 `dsh plugin remove` 可能被 `bundle-in-use` 挡下，先关掉用编程模式的会话再卸；0.2.0 上「卸载 → 重启 → 结算完成」一步到位，0.1.x 上要等 preset 被挂载（懒挂载）才触发；声明行的 `@deepseek-ai/*` 子行按 profile 目录向上解析，会先命中 CLI 留下的 0.1.5 共享树而不是 app.asar 的 0.2.0 运行时（本版修掉其中会致命的一处，其余行以 0.1.5 版本挂在 0.2.0 宿主上未观察到故障，彻底解决要宿主提供运行时解析基准）。
+
 ## [0.3.8] - 2026-09-28
 
 ### 修复
