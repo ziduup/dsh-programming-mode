@@ -8,6 +8,8 @@ A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) **bundle**
 
 > **dsh 0.2.0 desktop support arrives in 0.4.0** (0.3.8 and earlier were 0.1.x CLI only). One package, one composition — the installer picks whichever discovery channel the host speaks.
 
+![Programming Mode: pick 编程模式 in the mode selector above the composer to enable it](https://raw.githubusercontent.com/ziduup/dsh-programming-mode/main/assets/mode-picker.png)
+
 ## What it enforces
 
 1. Skills before action (`using-superpowers`)

@@ -8,7 +8,7 @@
 >
 > **0.4.0 起支持 dsh 0.2.0 桌面版**（0.3.8 及更早只支持 0.1.x CLI / web profile）；同一个包、同一份组合，安装器按宿主模型自动选通道。
 
-![编程模式：模式选择器里的「编程模式」](assets/mode-picker.png)
+![编程模式：在输入框上方的模式选择器里选「编程模式」即可启用](https://raw.githubusercontent.com/ziduup/dsh-programming-mode/main/assets/mode-picker.png)
 
 ## 目录
 
