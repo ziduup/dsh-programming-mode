@@ -382,6 +382,33 @@ const ralphAt = blockRowLines.findIndex((line) => line.includes("name: '@deepsee
 assert.equal(blockRowLines[ralphAt + 1].trim(), 'disabled: true', 'tool-ralph is not disabled the way the 0.2.x standard disables it 2')
 const rosterComposition = readFileSync(join(plantedHere, 'agent.cordis.yml'), 'utf8')
 assert.ok(rosterComposition.includes('dsh-workflow-worker-thread'), 'the 0.1.x composition must keep the worker-thread provider')
+// Same channel split, for the persona's prompt variables. 0.2.x registers
+// `provider` and `model` only: the `cwd` registration 0.1.5 carried is gone
+// (dsh-system-prompt's README states the rule), and interpolation is strict in
+// both versions, so the declaration row must not carry the reference — measured
+// on 0.2.1-rc.2, where a surviving clause killed turn 1 at step 1 with zero
+// tokens and nothing ever reached the model. The 0.1.x composition must KEEP it:
+// there the persona line is the only thing that tells the model its working
+// directory, while 0.2.x supplies `Current working directory:` as required
+// context through `dsh-working-directory`.
+assert.ok(!block.includes('{{cwd}}'), 'declaration still references the unregistered 0.2.x cwd variable')
+assert.ok(rosterComposition.includes('{{cwd}}'), 'the 0.1.x composition must keep the cwd reference')
+const declaredPersona = block.split('\n').find((line) => line.includes('You are a coding agent powered by'))
+assert.equal(declaredPersona.trim(), 'You are a coding agent powered by the {{model}} model.', 'the cwd clause was not dropped from the declared persona')
+// The text fixes are keyed on exact line bodies, so this tripwire has to fire
+// when the source wording drifts — otherwise a later edit silently ships a mode
+// whose every turn dies before the model call.
+assert.throws(
+	() => buildDeclaration({
+		version: '0.4.0',
+		compositionText: rosterComposition.replace('Your working directory is {{cwd}}.', 'Your working directory is {{cwd}} today.'),
+		metadata,
+		moduleUrl,
+		skillsDir,
+	}),
+	/cwd prompt variable/,
+	'the tripwire did not fire on a reworded persona sentence',
+)
 assert.ok(block.includes("      name: '@deepseek-ai/dsh-agent-preset'"), 'row does not name the preset plugin')
 assert.ok(block.includes('        id: programming'), 'config does not carry the preset id')
 assert.ok(block.includes(`        name: '${metadata.name}'`), 'config does not carry the preset name')

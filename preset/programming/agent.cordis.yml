@@ -28,6 +28,8 @@
 
 # The preset's own persona, shadowing the deployment default for this agent.
 # `{{model}}` and `{{cwd}}` resolve from the agent's own route and workspace.
+# (cwd is a 0.1.x-only variable: 0.2.x does not register it, so the declaration
+# row for that channel drops the clause — see HOST_0_2_TEXT_FIXES in declaration.mjs.)
 - id: persona
   name: '@deepseek-ai/dsh-persona'
   config:

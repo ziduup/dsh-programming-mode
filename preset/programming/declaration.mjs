@@ -112,6 +112,48 @@ const HOST_0_2_ROW_FIXES = new Map([
 	["name: '@deepseek-ai/dsh-tool-present'", (indent) => `${indent}name: '@deepseek-ai/dsh-tool-present'\n${indent.slice(2)}- id: tool-plugin-manager\n${indent}name: '@deepseek-ai/dsh-plugin-manager/tools'\n${indent}disabled: true`],
 ])
 
+/** Text lines the 0.2.x host can no longer render, transformed for the
+ * declaration row only. Same reasoning as the row fixes above: the composition
+ * is authored once and corrected per host, never forked.
+ *
+ * The prompt variable `cwd` is the whole reason this map exists. dsh 0.1.5-rc.2
+ * registered it (`dsh-agent-loop`: `variable("cwd", (context) =>
+ * context.agent?.session.header.cwd)`); 0.2.x registers `provider` and `model`
+ * only, and `dsh-system-prompt`'s own README states the rule outright — "custom
+ * persona templates must not depend on a built-in `{{cwd}}` variable: the loop
+ * does not register it, so unresolved references fail prompt assembly before
+ * any model request". Interpolation is strict in BOTH versions, so this is not
+ * a new validation: the variable was removed.
+ *
+ * The failure it causes is total, not cosmetic. The persona section is
+ * interpolated while the system prompt is assembled, so one surviving reference
+ * ends the turn at step 1 with zero tokens and nothing ever reaches the model —
+ * measured on 0.2.1-rc.2, where the mode was unusable for its first turn.
+ *
+ * The 0.1.x channel keeps the reference ON PURPOSE, which is why this is a
+ * transform and not a deletion from `agent.cordis.yml`: there `cwd` *is*
+ * registered, and that persona line is how the model learns its working
+ * directory at all (`presets/standard/agent.cordis.yml` of 0.1.5 carries the
+ * same suffix). On 0.2.x the `dsh-working-directory` service supplies
+ * `Current working directory: <JSON-quoted path>` as context instead — and that
+ * one is required, surviving even when the optional runtime context is
+ * suppressed — so dropping the prose loses nothing.
+ * @type {Map<string, (indent: string) => string>} */
+const HOST_0_2_TEXT_FIXES = new Map([
+	// Inert in YAML, but it would ship a false claim inside every profile patch:
+	// it says the cwd reference resolves, and on this channel it is exactly the
+	// thing being removed. The channel note right below it in the composition
+	// survives untouched, so this replacement stays one line. Must not spell the
+	// variable with braces: the tripwire in buildDeclaration refuses a
+	// declaration that mentions it anywhere.
+	["# `{{model}}` and `{{cwd}}` resolve from the agent's own route and workspace.",
+		(indent) => `${indent}# \`{{model}}\` resolves from the agent's own route.`],
+	// The prose inside the `prefix: |-` block scalar. One sentence leaves; the
+	// rest of the persona is untouched.
+	['You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.',
+		(indent) => `${indent}You are a coding agent powered by the {{model}} model.`],
+])
+
 /** Rewrite the lines that cannot survive the change of host: the two references
  * that were relative to the preset directory, and the rows the 0.2.x standard
  * moved on from. Indentation is kept per line; the caller shifts every line as a
@@ -125,6 +167,8 @@ function transformLine(line, refs) {
 	if (body === '') return ''
 	const fix = HOST_0_2_ROW_FIXES.get(body)
 	if (fix !== undefined) return fix(indent)
+	const textFix = HOST_0_2_TEXT_FIXES.get(body)
+	if (textFix !== undefined) return textFix(indent)
 	if (body === PLUGIN_MODULE_ROW) return `${indent}name: '${refs.moduleUrl}'`
 	if (body.includes(SKILLS_EXPR_MARK)) return `${indent}- '${refs.skillsDir}'`
 	return replaceTrailingWhitespace(line)
@@ -160,6 +204,18 @@ export function buildDeclaration(options) {
 		: options.compositionText.split(/\r?\n/).flatMap((line) => transformLine(line, { moduleUrl: options.moduleUrl, skillsDir: options.skillsDir }).split('\n')))
 		.map((line) => replaceTrailingWhitespace(line))
 		.filter((line) => line.trim() !== '')
+	if (options.pluginsText === undefined) {
+		// Tripwire for the class of bug the cwd fix belongs to. A prompt variable
+		// the 0.2.x host does not register throws while the system prompt is
+		// assembled, so the mode's first turn dies before any model call — and
+		// the text fixes above are keyed on exact line bodies, so a reworded
+		// persona sentence would silently stop carrying them. Refuse to write a
+		// declaration that would break every session instead of shipping one.
+		// Only `cwd` is checked: it is the variable measured as removed, and a
+		// hardcoded "registered set" would fight the host if it ever returns.
+		const survived = pluginLines.filter((line) => line.includes('{{cwd}}'))
+		if (survived.length > 0) throw new Error(`declaration still references the cwd prompt variable, which dsh 0.2.x does not register (turn 1 fails before the model call): ${survived[0].trim().slice(0, 70)}`)
+	}
 	if (pluginLines.length === 0) throw new Error('declaration has no plugin rows')
 	const body = pluginLines.map((line) => `${' '.repeat(PLUGINS_INDENT)}${line.replace(/\s+$/, '')}`).join('\n')
 	return [

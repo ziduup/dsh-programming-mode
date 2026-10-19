@@ -3,6 +3,26 @@
 本项目的所有重要变更记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.4.1] - 2026-10-19
+
+> 修复：0.4.0 在 **dsh 0.2.x** 上选中编程模式后，本轮运行**必定失败**且模型完全没被调用（0 token）。0.1.x 通道内容与 0.4.0 完全一致。
+
+### 修复
+
+- **`unknown prompt variable "{{cwd}}" in section "deployment:persona-prefix"`——编程模式在 0.2.x 上首个 turn 必挂**：
+  - **根因是宿主删了变量，不是新增了校验。** 0.1.5-rc.2 的 `dsh-agent-loop` 注册三个提示词变量（`provider` / `model` / `cwd`），0.2.x 只注册前两个；`dsh-system-prompt` 自己的 README 把这条规则写明了：*"Custom persona templates must not depend on a built-in `{{cwd}}` variable: the loop does not register it, so unresolved references fail prompt assembly before any model request."* 插值在**两代都严格**（0.1.5 同样 `throw new Error('unknown prompt variable …')`），所以不是校验变严，而是 `cwd` 没了。
+  - **失败是彻底的不是外观的**：persona 段落的插值发生在 system prompt 组装阶段，于是一个残留引用就让 turn 在 **step 1 之前**以 error 收尾——实测 0.2.1-rc.2 上 step 1 只存活 1 毫秒，`llmMs = 0`、`systemTokens = 0`，模型一次都没被调用；模式在选择器里照常可见可选，所以现象是"选得中、一发消息就挂"。
+  - **修复走既有的「一份组合、按宿主校正」**：新增 `HOST_0_2_TEXT_FIXES`（与 0.4.0 的 `HOST_0_2_ROW_FIXES` 同一机制、同一处），只给 0.2.x 的声明行摘掉该分句。**0.1.x 组合保持原样**——那里 `cwd` 有效，且那行 persona 是模型获知工作目录的**唯一**途径（0.1.5 自带 `presets/standard/agent.cordis.yml` 同样用 `suffix: Your working directory is {{cwd}}.`）；0.2.x 则由 `dsh-working-directory` 提供 `Current working directory: <路径>` 作为**必需**上下文，即使可选运行时上下文被关闭也仍然保留，所以摘掉这句在 0.2.x 上零损失。
+  - **加了绊线**：`buildDeclaration` 在生成声明行时若仍出现 cwd 引用就直接抛错。文本校正是按**整行精确匹配**做的，将来 persona 那句话被改写就会静默失配——宁可拒绝写出声明行，也不发布一个每轮必挂的模式（`declarePreset` 把它包成 `action: 'error'`，安装日志可见）。
+- **dry-run 新增两条断言 + 一条绊线测试**：0.2.x 声明行不含 cwd 引用、0.1.x 组合仍保留引用、以及把 persona 句子改写后绊线必须抛错。
+
+### 说明
+
+- 版本号 0.4.0 → 0.4.1：植入副本随重装/升级整体生效（installer 在版本戳不一致时覆盖植入目录），0.2.x 上的声明行也因版本变化被重写——所以**已经装着 0.4.0 的用户升级到 0.4.1 后，新开会话即恢复**，无需手工改 profile patch。
+- 本版**不改 `agent.cordis.yml` 的组合内容**（只加了两行注释说明 cwd 的通道差异），0.1.x 通道挂载的行与 0.4.0 逐行一致。
+- 复现与判定依据：`<DSH_HOME>/sessions/**/session.v4.jsonl.zstd` 里那条 `turn/end` 的 `reason.error.message`，以及 `0.1.5-rc.2` 与 `0.2.1-rc.2` 两份 `dsh-agent-loop/lib/index.js` 的变量注册行对比。
+- **README 截图改用 GitHub 绝对地址**（修插件市场卡片不显示截图）：`assets/mode-picker.png` 原先是相对路径，而 dshmarket 的图片闸门只放行 GitHub 图床的四个 https 域名（`raw.githubusercontent.com` / `user-images.githubusercontent.com` / `camo.githubusercontent.com` / `github.com`），**相对路径在建 `<img>` 之前就被丢弃**——所以卡片上一直没有截图，尽管该图 2026-10-09 就已在 main 上。改为绝对地址后，市场可从 README 抽取它（README.en.md 同步补图），npm 包页也能正常渲染；两个 badge 的域名不在白名单内、会被丢弃，因此白名单命中的恰好只有这一张模式选择器截图。
+
 ## [0.4.0] - 2026-10-08
 
 > 首个支持 **dsh 0.2.0 桌面版**的版本。0.3.8 及更早只覆盖 0.1.x CLI / web profile；同一个包、同一份组合，安装器按宿主模型自动选通道。
