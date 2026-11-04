@@ -161,3 +161,54 @@ test("编程模式空草稿 → 插入", () => {
 test("编程模式已召唤过 → already", () => {
   assert.equal(resolveClick({ preset: "programming", draft: "/brainstorming ", inputActions: {} }, "brainstorming").kind, "already")
 })
+
+const { createLink } = plugin.__test
+
+const target = (over) => ({ sessionId: "s1", preset: "programming", draft: "", inputActions: {}, ...over })
+
+test("attach 后成为当前目标", () => {
+  const link = createLink()
+  const next = target()
+  link.attach(next)
+  assert.equal(link.get(), next)
+})
+
+test("内容没变 → 不触发订阅者", () => {
+  const link = createLink()
+  let hits = 0
+  link.subscribe(() => { hits += 1 })
+  const actions = {}
+  link.attach(target({ inputActions: actions }))
+  link.attach(target({ inputActions: actions }))
+  assert.equal(hits, 1)
+})
+
+test("草稿变化 → 更新中继并通知", () => {
+  const link = createLink()
+  let hits = 0
+  link.subscribe(() => { hits += 1 })
+  const actions = {}
+  link.attach(target({ inputActions: actions }))
+  link.attach(target({ draft: "hi", inputActions: actions }))
+  assert.equal(link.get().draft, "hi")
+  assert.equal(hits, 2)
+})
+
+test("detach 只清自己", () => {
+  const link = createLink()
+  const next = target()
+  link.attach(next)
+  link.detach("other")
+  assert.equal(link.get(), next)
+  link.detach("s1")
+  assert.equal(link.get(), null)
+})
+
+test("退订后不再收到通知", () => {
+  const link = createLink()
+  let hits = 0
+  const off = link.subscribe(() => { hits += 1 })
+  off()
+  link.attach(target())
+  assert.equal(hits, 0)
+})
