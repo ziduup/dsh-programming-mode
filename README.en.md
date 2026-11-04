@@ -37,7 +37,8 @@ A draggable floating panel appears in a programming-mode session with six expert
 | 验 | Pre-delivery verifier | `/verification-before-completion ` |
 
 - **Append, never replace**: an existing draft keeps every character; the command goes on its own new line.
-- **Programming mode only**: the skills live in the preset's skill directory, so a standard-mode session shows a hint instead of inserting.
+- **Inserts only in programming mode**: the skills live in the preset's skill directory, so a standard-mode session shows a hint instead of inserting.
+- **The panel and `✦` are present in every mode**: switching sessions or changing the mode never closes the panel — only you close it.
 - **Close means closed**: `×` / `Esc` stops the auto-appearance; the `✦` next to the composer brings it back.
 - **Position is remembered**: drag it once and it stays there across reloads.
 
@@ -58,6 +59,8 @@ dsh plugin --profile web add ./dsh-programming-mode-<version>.tgz
 ```
 
 **dsh 0.2.0 desktop build (supported since 0.4.0)**: install from the plugin market inside the app. The desktop profile is owned by the app and the CLI refuses it: `profile "desktop" is managed exclusively by the Electron application`.
+
+**0.5.0 requires dsh ≥ 0.2.1-rc.5**: the client half relies on `captureInsertion`/`insertText`, which do not exist on 0.1.x. If you are still on dsh 0.1.x, stay on 0.4.1.
 
 > Installing by hand only does half the job: `cd ~/.dsh/profiles/web && pnpm add @ziduup/dsh-programming-mode` lands the package in `node_modules` but does **not** update `dsh.profile.bundles`, so the mode never appears — only `dsh plugin add` performs that reconciliation.
 

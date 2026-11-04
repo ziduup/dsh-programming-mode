@@ -54,7 +54,8 @@
 | 验 | 交付前验证员 | `/verification-before-completion ` |
 
 - **只追加，不清空**：草稿里已经有字时，命令另起一行接在后面。
-- **只在编程模式可用**：技能注册在编程模式的 preset 层，标准模式读不到，所以标准模式会话里点头像只提示、不插入。
+- **只在编程模式下插入**：技能注册在编程模式的 preset 层，标准模式读不到，所以标准模式会话里点头像只提示、不插入。
+- **面板和 `✦` 在任何模式下都在**：切会话、切模式都不会把面板关掉，只有你自己点 `×` / 按 `Esc` 才会关。
 - **关掉就关掉**：点 `×` / 按 `Esc` 关掉之后不再自动弹，输入框右侧的 `✦` 可以随时叫回来。
 - **位置会记住**：拖动后的位置与开合状态存在本地，刷新后保持。
 
@@ -75,6 +76,8 @@ dsh plugin --profile web add ./dsh-programming-mode-<版本>.tgz
 ```
 
 **dsh 0.2.0 桌面版（0.4.0 起支持）**：在应用内的插件市场搜索 dsh-programming-mode 安装。桌面 profile 由桌面版独占管理，CLI 会拒绝：`profile "desktop" is managed exclusively by the Electron application`。
+
+**0.5.0 要求 dsh ≥ 0.2.1-rc.5**：客户端半边依赖 `captureInsertion`/`insertText`，这两个在 0.1.x 上没有。还停在 dsh 0.1.x 的请留在 0.4.1。
 
 > 手工装的话注意只做了一半：`cd ~/.dsh/profiles/web && pnpm add @ziduup/dsh-programming-mode` 会把包装进 `node_modules`，但**不会**更新 `dsh.profile.bundles`，模式因此不会出现——这一步调和只有 `dsh plugin add` 会做。
 

@@ -22,7 +22,7 @@
 
 ### 变更
 
-- `package.json` 新增 `exports["./client"]`、`files: lib/client.js`、`dsh.client.platform = "web"`。
+- `package.json` 新增 `exports["./client"]`、`exports["./package.json"]`、`files: lib/client.js`、`dsh.client.platform = "web"`。
 - `engines.dsh` 由 `>=0.1.3-alpha.2` 抬到 `>=0.2.1-rc.5`：插入依赖 `captureInsertion`/`insertText`，这两个在 0.1.5 不存在，写降级分支等于维护一条永不执行的路径。
 - `cordis.patch.yml` 未改动。
 
