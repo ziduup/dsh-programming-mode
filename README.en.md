@@ -23,6 +23,24 @@ A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) **bundle**
 9. The full `using-superpowers` skill is mechanically injected into a new session's very first request batch (engine-level, independent of whether the model calls the `skill` tool), so the discipline applies from the first sentence
 10. Always-on code-volume discipline (Ponytail): the 7-rung minimal-code ladder (YAGNI → reuse → stdlib → native → installed dependency → one line → minimum) runs at default `full` intensity in the persona every turn; it governs implementation volume only and never overrides the process rules above. The user can switch with "ponytail lite/ultra" or turn it off with "stop ponytail".
 
+## Expert panel
+
+A draggable floating panel appears in a programming-mode session with six experts. Clicking an avatar appends the skill's invocation command to the current draft — **it never sends**:
+
+| Avatar | Expert | Command |
+|---|---|---|
+| 问 | Requirement griller | `/brainstorming ` |
+| 计 | Plan writer | `/writing-plans ` |
+| 测 | TDD practitioner | `/test-driven-development ` |
+| 排 | Debugger | `/systematic-debugging ` |
+| 简 | Minimalist | `/ponytail ` |
+| 验 | Pre-delivery verifier | `/verification-before-completion ` |
+
+- **Append, never replace**: an existing draft keeps every character; the command goes on its own new line.
+- **Programming mode only**: the skills live in the preset's skill directory, so a standard-mode session shows a hint instead of inserting.
+- **Close means closed**: `×` / `Esc` stops the auto-appearance; the `✦` next to the composer brings it back.
+- **Position is remembered**: drag it once and it stays there across reloads.
+
 ## Install
 
 There is exactly one install command shape: `dsh plugin --profile <profile> add <source>`. dsh is a thin pnpm forwarder here — it initializes the profile, runs pnpm inside it, then folds every dependency that declares `dsh.bundle` into the profile's `dsh.profile.bundles` layer stack. **There is no separate `npm install` step**: "npm channel" only means the package resolves from the npm registry, one *source* among GitHub and a local tarball. Package page: [npmjs.com/package/@ziduup/dsh-programming-mode](https://www.npmjs.com/package/@ziduup/dsh-programming-mode).
