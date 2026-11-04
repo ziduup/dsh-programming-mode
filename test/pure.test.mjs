@@ -212,3 +212,40 @@ test("退订后不再收到通知", () => {
   link.attach(target())
   assert.equal(hits, 0)
 })
+
+const { defaultPos, insertInto } = plugin.__test
+
+test("默认位置贴右下角并留边", () => {
+  assert.deepEqual(defaultPos(268, 208, 1440, 900), { x: 1148, y: 620 })
+})
+
+test("小视口下默认位置不越界", () => {
+  assert.deepEqual(defaultPos(268, 208, 300, 240), { x: 8, y: 0 })
+})
+
+const fakeInput = (behaviour, span = { start: 0, end: 0 }) => ({
+  inputActions: {
+    captureInsertion: () => ({ ...span, draftRev: 1 }),
+    insertText: behaviour,
+  },
+})
+
+test("插入成功 → ok", () => {
+  assert.equal(insertInto(fakeInput(() => true), "/brainstorming "), "ok")
+})
+
+test("composer 忙（insertText 静默返回 false）→ failed", () => {
+  assert.equal(insertInto(fakeInput(() => false), "/brainstorming "), "failed")
+})
+
+test("insertText 抛异常 → failed，不把异常漏给调用方", () => {
+  const target = fakeInput(() => { throw new Error("stale draftRev") })
+  assert.equal(insertInto(target, "/brainstorming "), "failed")
+})
+
+test("草稿里有选中文字 → 不插入，且根本不调用 insertText", () => {
+  let called = false
+  const target = fakeInput(() => { called = true; return true }, { start: 3, end: 9 })
+  assert.equal(insertInto(target, "/brainstorming "), "selection")
+  assert.equal(called, false)
+})
