@@ -20,7 +20,7 @@ test("工厂返回可挂载的插件对象", async () => {
 // 这组断言是「配置回显」：它只能抓住转录错误（写错字段名、漏掉清单项），
 // 抓不到「宿主是否接受这份声明」——后者只有真机能验。42 绿不等于宿主兼容。
 test("package.json 声明了 client 半边且没有多余字段", () => {
-  assert.equal(pkg.version, "0.5.0")
+  assert.equal(pkg.version, "0.5.1")
   assert.equal(pkg.type, "module")
   assert.equal(pkg.exports["."], "./index.js")
   assert.equal(pkg.exports["./client"], "./lib/client.js")

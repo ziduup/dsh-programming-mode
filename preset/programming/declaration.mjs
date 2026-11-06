@@ -89,13 +89,21 @@ export function readPresetMetadata(text) {
  * differences are patched here instead of forking the composition, which would
  * give the two channels two sources of truth.
  *
- * Measured against `dsh-web-app/presets/standard.patch.yml` of 0.2.0-rc.2, the
- * whole drift is three rows:
+ * Measured against `dsh-web-app/presets/standard.patch.yml` of 0.2.2-rc.1, the
+ * drift is these rows and option names:
  *   - `dsh-workflow-worker-thread` was replaced by `dsh-workflow-ptc` (the
  *     provider row inside the `delegation` group's `workflowEngine` realm);
  *   - `tool-ralph` is disabled there;
  *   - `tool-plugin-manager` (`@deepseek-ai/dsh-plugin-manager/tools`, disabled)
- *     is new.
+ *     is new;
+ *   - the `tool-subagent-list-agents` row is gone: 0.2.x folds the three
+ *     subagent-control tools into one package instance, and `/list-agents` is
+ *     not in that package's `exports` map, so Node refuses the specifier
+ *     outright (`ERR_PACKAGE_PATH_NOT_EXPORTED`), the row never starts, and the
+ *     whole preset is rejected;
+ *   - `modelSelectionSettings` became `modelSelection` (plus `modelDiscovery`),
+ *     and `backgroundMode` no longer exists — continuability is a provider
+ *     capability on 0.2.x, not a row option.
  * The first one is not cosmetic: `@deepseek-ai/dsh-workflow-worker-thread`
  * resolves to the stale 0.1.5 copy the CLI left in `$DSH_HOME/profiles/
  * node_modules`, the host disables that row as peer-incompatible, `workflowEngine`
@@ -110,6 +118,15 @@ const HOST_0_2_ROW_FIXES = new Map([
 	// The row after `present` is a sibling, so its `- id:` line sits two columns
 	// left of a key line — the one relative indentation YAML fixes for this style.
 	["name: '@deepseek-ai/dsh-tool-present'", (indent) => `${indent}name: '@deepseek-ai/dsh-tool-present'\n${indent.slice(2)}- id: tool-plugin-manager\n${indent}name: '@deepseek-ai/dsh-plugin-manager/tools'\n${indent}disabled: true`],
+	// Both lines of the row must go. Deleting only the `- id:` line would leave
+	// an orphan `name:` key under the previous row and corrupt the document.
+	['- id: tool-subagent-list-agents', () => ''],
+	["name: '@deepseek-ai/dsh-tool-subagent-control/list-agents'", () => ''],
+	// The shipped standard preset enables both on spawn and neither on fork;
+	// the four `backgroundMode` rows simply disappear.
+	['modelSelectionSettings: true', (indent) => `${indent}modelSelection: true\n${indent}modelDiscovery: true`],
+	['backgroundMode: continuable', () => ''],
+	['backgroundMode: one-shot', () => ''],
 ])
 
 /** Text lines the 0.2.x host can no longer render, transformed for the
@@ -343,6 +360,14 @@ export function blockProblems(block) {
 	if (code.some((line) => line.trim() === PLUGIN_MODULE_ROW)) problems.push('still references the preset-relative injection module')
 	if (code.some((line) => line.includes(SKILLS_EXPR_MARK))) problems.push('still derives the skills directory from baseUrl')
 	if (code.some((line) => line.includes('baseUrl'))) problems.push('still mentions baseUrl')
+	// A retired subpath export is not cosmetic drift: Node refuses the specifier,
+	// the row never starts, `mountPreset` rejects the whole preset, and the mode
+	// silently disappears from the picker. The option renames below are inert
+	// instead of fatal — the host drops undeclared keys — but they cost the
+	// feature they were meant to enable, so they are tripped on as well.
+	if (code.some((line) => line.includes('dsh-tool-subagent-control/list-agents'))) problems.push('still names the retired list-agents subpath export')
+	if (code.some((line) => line.includes('modelSelectionSettings:'))) problems.push('still uses the retired modelSelectionSettings option')
+	if (code.some((line) => line.includes('backgroundMode:'))) problems.push('still uses the retired backgroundMode option')
 	for (const line of code) {
 		if (line.trim() === '') continue
 		const indent = line.length - line.trimStart().length

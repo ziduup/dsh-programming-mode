@@ -3,6 +3,26 @@
 本项目的所有重要变更记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.5.1] - 2026-11-06
+
+> 修复：dsh **0.2.2** 上升级后「编程模式」从模式选择器里消失。受影响范围只有 0.2.x 声明行，0.1.x 通道内容未变。
+
+### 修复
+
+- **声明行删掉 `tool-subagent-list-agents`**。0.2.x 把发消息、中断、列子代理三个工具并进 `@deepseek-ai/dsh-tool-subagent-control` 的一个实例，`/list-agents` 子路径已不在该包的 `exports` 映射里。Node 因此直接拒绝这个 specifier（`ERR_PACKAGE_PATH_NOT_EXPORTED`），这一行永远起不来；而 `mountPreset` 只要有一行失败就整体抛错，注册表把 preset 标成 `broken`，选择器又只列健康项——表现就是模式凭空消失、旧会话的标签却还在。0.1.x 组合里的同一行**保持不变**（那里子路径合法），两条通道继续共用一份组合。
+- **`modelSelectionSettings` → `modelSelection` + `modelDiscovery`**。旧键不在 0.2.x 的 `tool-subagent` schema 里，子代理的路由字段因此一直没有真正开启。
+- **删掉 4 处 `backgroundMode`**。0.2.x 的可继续性由 provider 能力决定，不再是行选项；留着只是被 schema 丢弃的死配置。
+
+### 变更
+
+- `blockProblems()` 新增三条结构不变量：生成结果里若再出现 `list-agents` 子路径、`modelSelectionSettings` 或 `backgroundMode`，写入 profile 之前就拒绝。
+- 新增 `test/declaration.test.mjs`（6 条）。其中一对断言专门锁住「两条通道共用一份组合」这件事：源文件必须仍有 `list-agents` 行，生成的声明必须没有。
+
+### 已知上限
+
+- 行集只对齐到 `dsh-web-app/presets/standard.patch.yml` 的 **0.2.2-rc.1**。宿主再往后若调整行集，需要在同一处 `HOST_0_2_ROW_FIXES` 里补转换。
+- 没有补 `time-context` / `tool-schedule`：缺席的行不会让 preset 变 `broken`，属于与标准模式的功能差而非缺陷，留到单独一版处理。
+
 ## [0.5.0] - 2026-11-04
 
 > 新增：编程模式会话里出现一块可拖动的「编程专家」浮窗，点一下把对应技能的调用命令追加进输入框。**本版本第一次带客户端半边**（`lib/client.js`），因此 `dsh.client` 与 `engines.dsh` 都变了。
