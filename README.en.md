@@ -44,29 +44,51 @@ A draggable floating panel appears in a programming-mode session with six expert
 
 ## Install
 
-There is exactly one install command shape: `dsh plugin --profile <profile> add <source>`. dsh is a thin pnpm forwarder here — it initializes the profile, runs pnpm inside it, then folds every dependency that declares `dsh.bundle` into the profile's `dsh.profile.bundles` layer stack. **There is no separate `npm install` step**: "npm channel" only means the package resolves from the npm registry, one *source* among GitHub and a local tarball. Package page: [npmjs.com/package/@ziduup/dsh-programming-mode](https://www.npmjs.com/package/@ziduup/dsh-programming-mode).
+**The install path depends on your host; there is no single command that works everywhere.** Find your row first.
+
+| Your host | How to install | Which version |
+|---|---|---|
+| **Desktop build** (Electron client), dsh ≥ 0.2.1-rc.5 | In-app: sidebar **More** → **Browse more plugins** → search `dsh-programming-mode`. **Do not use the CLI** | `0.5.1` |
+| **Desktop build**, dsh 0.2.0.x | Same, in-app | `0.4.1` |
+| **CLI / web profile**, dsh ≥ 0.2.1-rc.5 | `dsh plugin --profile <profile> add @ziduup/dsh-programming-mode@0.5.1` | `0.5.1` |
+| **CLI / web profile**, dsh 0.2.0.x | `dsh plugin --profile <profile> add @ziduup/dsh-programming-mode@0.4.1` | `0.4.1` |
+| **dsh 0.1.x** | `dsh plugin --profile <profile> add @ziduup/dsh-programming-mode@0.4.1` | `0.4.1` |
+
+Two hard rules:
+
+- **The desktop build does not accept the CLI.** Its profile is owned by the app and the command is refused outright: `profile "desktop" is managed exclusively by the Electron application`. To get the mode into the desktop app, install it from the in-app plugin market.
+- **`web` in `--profile web` is a profile name, not "the web edition".** The plugin lands in exactly the profile you name — one installed into `web` never shows up in the desktop app, and vice versa.
+
+Do not mix versions — the failure modes differ:
+
+- `0.5.x` declares `engines.dsh` `>=0.2.1-rc.5`; older hosts **refuse to install it**.
+- `0.4.1` on dsh **0.2.2** makes the mode vanish from the picker: one composition row names a retired subpath export (`@deepseek-ai/dsh-tool-subagent-control/list-agents`), Node refuses to resolve it, that row never starts, the whole preset is marked `broken`, and the picker lists healthy presets only. `0.5.1` corrects the row set against 0.2.2's `standard`.
+
+### Sources for the CLI path
+
+The CLI has exactly one command shape: `dsh plugin --profile <profile> add <source>`. dsh is a thin pnpm forwarder here — it initializes the profile, runs pnpm inside it, then folds every dependency that declares `dsh.bundle` into the profile's `dsh.profile.bundles` layer stack. **There is no separate `npm install` step**: "npm channel" only means the package resolves from the npm registry, one *source* among GitHub and a local tarball. Package page: [npmjs.com/package/@ziduup/dsh-programming-mode](https://www.npmjs.com/package/@ziduup/dsh-programming-mode).
 
 ```sh
 # source 1: npm registry (recommended — the registry path is steadier)
-dsh plugin --profile web add @ziduup/dsh-programming-mode
+dsh plugin --profile web add @ziduup/dsh-programming-mode@0.5.1
 
-# source 2: GitHub (git direct install)
-dsh plugin --profile web add github:ziduup/dsh-programming-mode
+# source 2: GitHub (git direct install, pinning the tag is steadier)
+dsh plugin --profile web add github:ziduup/dsh-programming-mode#v0.5.1
 
 # source 3: local directory / tarball
 dsh plugin --profile web add ./dsh-programming-mode
-dsh plugin --profile web add ./dsh-programming-mode-<version>.tgz
+dsh plugin --profile web add ./dsh-programming-mode-0.5.1.tgz
 ```
 
-**dsh 0.2.0 desktop build (supported since 0.4.0)**: install from the plugin market inside the app. The desktop profile is owned by the app and the CLI refuses it: `profile "desktop" is managed exclusively by the Electron application`.
-
-**0.5.0 requires dsh ≥ 0.2.1-rc.5**: the client half relies on `captureInsertion`/`insertText`, which do not exist on 0.1.x. If you are still on dsh 0.1.x, stay on 0.4.1.
+`web` above is only an example profile name — substitute your own. What you cannot substitute is the desktop build: it always goes through the in-app market.
 
 > Installing by hand only does half the job: `cd ~/.dsh/profiles/web && pnpm add @ziduup/dsh-programming-mode` lands the package in `node_modules` but does **not** update `dsh.profile.bundles`, so the mode never appears — only `dsh plugin add` performs that reconciliation.
 
-Restart the profile; the 编程模式 preset then appears in the mode picker. On the dsh 0.2.0 desktop build you may need to restart twice: the first boot only writes the declaration row, and the picker reads it on the next one.
+### Verifying the install
 
-If it is still missing after a restart, separate "never registered" from "registered but `broken`": the 0.2.0 picker does not list presets whose activation failed, and the usual cause is one row of the composition resolving to a stale 0.1.x package the host then disables as peer-incompatible, so the service that row should provide never arrives (a missing engine row leaves the workflow tools waiting forever). Since 0.4.0 the declaration row's drift is corrected against the same kernel version's `dsh-web-app/presets/standard.patch.yml` (`workflow-ptc`, `tool-ralph` disabled, `tool-plugin-manager`); check your own compositions against that file the same way.
+Restart that profile; the 编程模式 preset then appears in the mode picker. The desktop build may need two restarts: the first boot only writes the declaration row, and the picker reads it on the next one.
+
+If it is still missing, separate "never registered" from "registered but `broken`": a 0.2.x picker does not list presets whose activation failed. Check **Settings → Agent presets**, which renders the full roster — a broken entry carries a red "Failed to load" badge and the reason appears on hover. `0.5.1` corrects the row set against the 0.2.2-rc.1 `dsh-web-app/presets/standard.patch.yml` (the retired `list-agents` row removed, `workflow-ptc` replacing `workflow-worker-thread`, `tool-ralph` disabled, `tool-plugin-manager` added); audit your own compositions against the same file of the **matching kernel version**.
 
 If the mode *is* selectable but every run fails with `format v4 message requires a producer-owned source kind`, that is the first-step injection source used up to 0.3.8 colliding with session format v4 on 0.2.0: v4 admits only producer-owned kinds, and the retired `kind: 'plugin'` shape is hard-refused on both the write and the read path. Since 0.4.0 the injection carries the host's own `skill-invocation` record (the same one the `skill` tool attaches to its `<skill_content>` body), which every released validator admits, v0 through v4. Upgrade to 0.4.0 and new sessions run; existing logs are unaffected.
 

@@ -61,31 +61,53 @@
 
 ## 安装
 
-安装命令只有一种形态：`dsh plugin --profile <profile> add <来源>`。dsh 在这里是 pnpm 的转发层——它初始化 profile、在 profile 目录里跑 pnpm，再把声明了 `dsh.bundle` 的依赖并入 `dsh.profile.bundles` 层栈。**没有单独的 `npm install` 步骤**：所谓「npm 渠道」指的是包从 npm registry 解析，和 GitHub、本地 tarball 只是**来源**不同。包页：[npmjs.com/package/@ziduup/dsh-programming-mode](https://www.npmjs.com/package/@ziduup/dsh-programming-mode)。
+**安装方式随宿主不同，没有一条通吃的命令。** 先在下表找到自己那一行。
+
+| 你的宿主 | 安装方式 | 装哪个版本 |
+|---|---|---|
+| **桌面版**（Electron 客户端），dsh ≥ 0.2.1-rc.5 | 应用内：侧边栏 **更多** → **浏览更多插件** → 搜 `dsh-programming-mode`。**不要用命令行** | `0.5.1` |
+| **桌面版**，dsh 0.2.0.x | 同上，应用内安装 | `0.4.1` |
+| **命令行 / web profile**，dsh ≥ 0.2.1-rc.5 | `dsh plugin --profile <profile> add @ziduup/dsh-programming-mode@0.5.1` | `0.5.1` |
+| **命令行 / web profile**，dsh 0.2.0.x | `dsh plugin --profile <profile> add @ziduup/dsh-programming-mode@0.4.1` | `0.4.1` |
+| **dsh 0.1.x** | `dsh plugin --profile <profile> add @ziduup/dsh-programming-mode@0.4.1` | `0.4.1` |
+
+两条硬规则：
+
+- **桌面版不接受 CLI。** 桌面 profile 由应用独占，命令会被直接拒绝：`profile "desktop" is managed exclusively by the Electron application`。要让模式出现在桌面应用里，只能在应用内插件市场装。
+- **`--profile web` 里的 `web` 是 profile 名，不是「网页版」。** 装进哪个 profile 就只在哪个 profile 生效——装到 `web` 的插件不会出现在桌面应用里，反过来也一样。
+
+版本不能混，混了表现不同：
+
+- `0.5.x` 的 `engines.dsh` 是 `>=0.2.1-rc.5`，在更旧的宿主上会被**拒装**。
+- `0.4.1` 装到 dsh **0.2.2** 上会「模式选择器里没有编程模式」：组合里有一行指向已退役的子路径导出（`@deepseek-ai/dsh-tool-subagent-control/list-agents`），Node 直接拒绝解析，该行起不来，整个 preset 被判 `broken`，而选择器只列健康的 preset。0.5.1 已按 0.2.2 的 `standard` 行集校正。
+
+### 命令行安装的来源
+
+命令行只有一种命令形态：`dsh plugin --profile <profile> add <来源>`。dsh 在这里是 pnpm 的转发层——它初始化 profile、在 profile 目录里跑 pnpm，再把声明了 `dsh.bundle` 的依赖并入 `dsh.profile.bundles` 层栈。**没有单独的 `npm install` 步骤**：所谓「npm 渠道」指的是包从 npm registry 解析，和 GitHub、本地 tarball 只是**来源**不同。包页：[npmjs.com/package/@ziduup/dsh-programming-mode](https://www.npmjs.com/package/@ziduup/dsh-programming-mode)。
 
 ```sh
 # 来源 1：npm registry（推荐，registry 通道更稳）
-dsh plugin --profile web add @ziduup/dsh-programming-mode
+dsh plugin --profile web add @ziduup/dsh-programming-mode@0.5.1
 
-# 来源 2：GitHub（git 直装）
-dsh plugin --profile web add github:ziduup/dsh-programming-mode
+# 来源 2：GitHub（git 直装，钉 tag 更稳）
+dsh plugin --profile web add github:ziduup/dsh-programming-mode#v0.5.1
 
 # 来源 3：本地目录 / tarball
 dsh plugin --profile web add ./dsh-programming-mode
-dsh plugin --profile web add ./dsh-programming-mode-<版本>.tgz
+dsh plugin --profile web add ./dsh-programming-mode-0.5.1.tgz
 ```
 
-**dsh 0.2.0 桌面版（0.4.0 起支持）**：在应用内的插件市场搜索 dsh-programming-mode 安装。桌面 profile 由桌面版独占管理，CLI 会拒绝：`profile "desktop" is managed exclusively by the Electron application`。
-
-**0.5.0 要求 dsh ≥ 0.2.1-rc.5**：客户端半边依赖 `captureInsertion`/`insertText`，这两个在 0.1.x 上没有。还停在 dsh 0.1.x 的请留在 0.4.1。
+上面的 `web` 只是示例 profile 名，换成你自己的即可；但**桌面版无论换成什么都不行**，它走应用内市场。
 
 > 手工装的话注意只做了一半：`cd ~/.dsh/profiles/web && pnpm add @ziduup/dsh-programming-mode` 会把包装进 `node_modules`，但**不会**更新 `dsh.profile.bundles`，模式因此不会出现——这一步调和只有 `dsh plugin add` 会做。
 
-安装后重启该 profile，模式选择器里即出现 **编程模式**。dsh 0.2.0 桌面版可能需要重启两次：第一次启动只是把 preset 写成一条声明行，模式选择器要等下一次启动才读得到。
+### 装完确认
 
-重启后仍看不到时，先分清「没登记」和「登记了但被判 `broken`」：0.2.0 的选择器不列激活失败的 preset，而激活失败最常见的原因是组合里的某一行解析到了 0.1.x 的旧包、被宿主按 peer 不兼容禁用——它本该提供的服务就永远缺席（例如引擎行缺失会让工作流工具一直等待下去）。0.4.0 起，声明行里的行漂移已按同版本内核的 `dsh-web-app/presets/standard.patch.yml` 校正（`workflow-ptc`、`tool-ralph` 禁用、`tool-plugin-manager`）；自定义组合时请以该文件为准做同样对照。
+重启该 profile，模式选择器里应出现 **编程模式**。桌面版可能需要重启两次：第一次启动只是把 preset 写成一条声明行，选择器要等下一次启动才读得到。
 
-模式能选、但一选中就报 `本轮运行失败：format v4 message requires a producer-owned source kind`，那是 0.3.8 及更早版本的首步注入 source 与 0.2.0 的日志格式 v4 冲突：v4 只承认「生产者自有」的 kind，而 `kind: 'plugin'` 这一退役形状在写入和读取两条路径上都会被硬拒。0.4.0 起改用宿主自己的 `skill-invocation` 形状（与 `skill` 工具注入 `<skill_content>` 时同款），v0–v4 各代校验器都放行；升到 0.4.0 后新开的会话即可正常运行，已有的旧日志不受影响。
+仍然看不到时，先分清「没登记」和「登记了但被判 `broken`」：0.2.x 的选择器不列激活失败的 preset。判断方法是看 **设置 → Agent 预设**——那里列的是完整 roster，坏条目带红色「加载失败」徽标，悬停即可看到具体原因。0.5.1 已按 0.2.2-rc.1 的 `dsh-web-app/presets/standard.patch.yml` 校正行集（删掉退役的 `list-agents` 行、`workflow-ptc` 取代 `workflow-worker-thread`、`tool-ralph` 禁用、新增 `tool-plugin-manager`）；自定义组合时请以**同版本内核**的该文件为准做同样对照。
+
+模式能选、但一选中就报 `本轮运行失败：format v4 message requires a producer-owned source kind`，那是 0.3.8 及更早版本的首步注入 source 与 0.2.0 的日志格式 v4 冲突：v4 只承认「生产者自有」的 kind，而 `kind: 'plugin'` 这一退役形状在写入和读取两条路径上都会被硬拒。0.4.0 起改用宿主自己的 `skill-invocation` 形状（与 `skill` 工具注入 `<skill_content>` 时同款），v0–v4 各代校验器都放行。升到 0.4.0 后新开的会话即可正常运行，已有的旧日志不受影响。
 
 ## 升级行为
 
